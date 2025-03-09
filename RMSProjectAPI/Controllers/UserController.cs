@@ -86,7 +86,7 @@ namespace RMSProjectAPI.Controllers
 
         // ✅ Add Role API
         //[HttpPost("AddRole")]
-        //[Authorize(Roles ="admin")]
+        //[Authorize(Roles = "admin")]
         //public async Task<IActionResult> AddRole([FromBody] string roleName)
         //{
         //    if (string.IsNullOrWhiteSpace(roleName))
@@ -277,3 +277,8 @@ namespace RMSProjectAPI.Controllers
         // Forget Password
     }
 }
+
+
+// To Do
+
+// 1- (Create (with generating QR Codes)/ Retrieve/ Update/ Delete)

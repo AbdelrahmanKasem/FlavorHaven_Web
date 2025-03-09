@@ -6,6 +6,7 @@ using RMSProjectAPI.Model;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using RMSProjectAPI.Database;
 
 namespace RMSProjectAPI.Controllers
 {
@@ -20,121 +21,116 @@ namespace RMSProjectAPI.Controllers
             _context = context;
         }
 
-        // Create a new Menu
+        // ✅ Create Menu
         [HttpPost("CreateMenu")]
         public async Task<IActionResult> CreateMenu([FromBody] MenuDto menuDto)
         {
             if (menuDto == null)
-            {
                 return BadRequest("Invalid menu data.");
-            }
 
             var menu = new Menu
             {
                 Id = Guid.NewGuid(),
-                Offers = menuDto.Offers
+                Offers = menuDto.Offers,
+                BranchId = menuDto.BranchId
             };
 
-            _context.Menus.Add(menu);
+            await _context.Menus.AddAsync(menu);
             await _context.SaveChangesAsync();
 
             return CreatedAtAction(nameof(GetMenuById), new { id = menu.Id }, menu);
         }
 
-        // Get all Menus
+        // ✅ Get all Menus
         [HttpGet("GetMenus")]
-        public async Task<IActionResult> GetMenus()
+        public async Task<IActionResult> GetAllMenus()
         {
             var menus = await _context.Menus.ToListAsync();
             return Ok(menus);
         }
 
-        // Get Menu by Id
+        // ✅ Get Menu by ID
         [HttpGet("GetMenu/{id}")]
         public async Task<IActionResult> GetMenuById(Guid id)
         {
             var menu = await _context.Menus.FindAsync(id);
-
             if (menu == null)
-            {
-                return NotFound($"Menu with ID {id} not found.");
-            }
-
+                return NotFound();
             return Ok(menu);
         }
 
-        // Update Menu
+        // ✅ Update Menu
         [HttpPut("UpdateMenu/{id}")]
         public async Task<IActionResult> UpdateMenu(Guid id, [FromBody] MenuDto menuDto)
         {
-            if (menuDto == null)
-            {
-                return BadRequest("Invalid menu data.");
-            }
-
             var menu = await _context.Menus.FindAsync(id);
             if (menu == null)
-            {
-                return NotFound($"Menu with ID {id} not found.");
-            }
+                return NotFound();
 
             menu.Offers = menuDto.Offers;
+            menu.BranchId = menuDto.BranchId;
 
-            _context.Menus.Update(menu);
             await _context.SaveChangesAsync();
-
-            return Ok(menu);
+            return NoContent();
         }
 
-        // Delete Menu
+        // ✅ Delete Menu
         [HttpDelete("DeleteMenu/{id}")]
         public async Task<IActionResult> DeleteMenu(Guid id)
         {
             var menu = await _context.Menus.FindAsync(id);
             if (menu == null)
-            {
-                return NotFound($"Menu with ID {id} not found.");
-            }
+                return NotFound();
 
             _context.Menus.Remove(menu);
             await _context.SaveChangesAsync();
-
             return NoContent();
         }
 
-        // ✅ Create a new Category
+        // ✅ Create Category
         [HttpPost("CreateCategory")]
         public async Task<IActionResult> CreateCategory([FromBody] CategoryDto categoryDto)
         {
-            if (categoryDto == null || string.IsNullOrWhiteSpace(categoryDto.Name))
-            {
-                return BadRequest("Category name is required.");
-            }
+            if (categoryDto == null)
+                return BadRequest("Invalid category data.");
 
             var category = new Category
             {
                 Id = Guid.NewGuid(),
                 Name = categoryDto.Name,
-                Offers = categoryDto.Offers
+                Offers = categoryDto.Offers,
+                MenuId = categoryDto.MenuId
             };
 
-            _context.Categories.Add(category);
+            await _context.Categories.AddAsync(category);
             await _context.SaveChangesAsync();
 
             return CreatedAtAction(nameof(GetCategoryById), new { id = category.Id }, category);
         }
 
-        // ✅ Get Category By Id
+        // ✅ Get all Categories
+        [HttpGet("GetCategories")]
+        public async Task<IActionResult> GetAllCategories()
+        {
+            var categories = await _context.Categories.ToListAsync();
+            return Ok(categories);
+        }
+
+        // ✅ Get all Categories by Menu ID
+        [HttpGet("GetCategoriesByMenu/{menuId}")]
+        public async Task<IActionResult> GetCategoriesByMenuId(Guid menuId)
+        {
+            var categories = await _context.Categories.Where(c => c.MenuId == menuId).ToListAsync();
+            return Ok(categories);
+        }
+
+        // ✅ Get Category by ID
         [HttpGet("GetCategory/{id}")]
         public async Task<IActionResult> GetCategoryById(Guid id)
         {
             var category = await _context.Categories.FindAsync(id);
-
             if (category == null)
-            {
                 return NotFound();
-            }
-
             return Ok(category);
         }
 
@@ -142,24 +138,16 @@ namespace RMSProjectAPI.Controllers
         [HttpPut("UpdateCategory/{id}")]
         public async Task<IActionResult> UpdateCategory(Guid id, [FromBody] CategoryDto categoryDto)
         {
-            if (categoryDto == null || string.IsNullOrWhiteSpace(categoryDto.Name))
-            {
-                return BadRequest("Category name is required.");
-            }
-
             var category = await _context.Categories.FindAsync(id);
             if (category == null)
-            {
-                return NotFound("Category not found.");
-            }
+                return NotFound();
 
             category.Name = categoryDto.Name;
             category.Offers = categoryDto.Offers;
+            category.MenuId = categoryDto.MenuId;
 
-            _context.Categories.Update(category);
             await _context.SaveChangesAsync();
-
-            return Ok(category);
+            return NoContent();
         }
 
         // ✅ Delete Category
@@ -168,192 +156,154 @@ namespace RMSProjectAPI.Controllers
         {
             var category = await _context.Categories.FindAsync(id);
             if (category == null)
-            {
-                return NotFound("Category not found.");
-            }
+                return NotFound();
 
             _context.Categories.Remove(category);
             await _context.SaveChangesAsync();
-
-            return NoContent(); // 204 status code, indicating successful deletion with no content
+            return NoContent();
         }
 
-        // ✅ Create new menu item
+        // ✅ Create MenuItem
         [HttpPost("CreateMenuItem")]
-        public async Task<IActionResult> CreateMenuItem([FromBody] MenuItemDto model)
+        public async Task<IActionResult> CreateMenuItem([FromBody] MenuItemDto menuItemDto)
         {
-            if (model == null)
-            {
+            if (menuItemDto == null)
                 return BadRequest("Invalid menu item data.");
-            }
 
-            // Check if the category exists
-            var categoryExists = await _context.Categories.AnyAsync(c => c.Id == model.CategoryId);
-            if (!categoryExists)
-            {
-                return NotFound($"Category with ID {model.CategoryId} not found.");
-            }
-
-            var newItem = new MenuItem
+            var menuItem = new MenuItem
             {
                 Id = Guid.NewGuid(),
-                Name = model.Name,
-                Description = model.Description,
-                ImagePath = model.ImagePath,
-                Price = model.Price,
-                Duration = model.Duration,
-                Offers = model.Offers,
-                CategoryId = model.CategoryId
+                Name = menuItemDto.Name,
+                Description = menuItemDto.Description,
+                ImagePath = menuItemDto.ImagePath,
+                Price = menuItemDto.Price,
+                Duration = menuItemDto.Duration,
+                Offers = menuItemDto.Offers,
+                CategoryId = menuItemDto.CategoryId
             };
 
-            _context.MenuItems.Add(newItem);
+            await _context.MenuItems.AddAsync(menuItem);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetMenuItemById), new { id = newItem.Id }, newItem);
+            return CreatedAtAction(nameof(GetMenuItemById), new { id = menuItem.Id }, menuItem);
         }
 
-        // ✅ Get Menu Item By Id
+        // ✅ Get all MenuItems
+        [HttpGet("GetMenuItems")]
+        public async Task<IActionResult> GetAllMenuItems()
+        {
+            var menuItems = await _context.MenuItems.ToListAsync();
+            return Ok(menuItems);
+        }
+
+        // ✅ Get MenuItems by Category ID
+        [HttpGet("GetMenuItemsByCategory/{categoryId}")]
+        public async Task<IActionResult> GetMenuItemsByCategoryId(Guid categoryId)
+        {
+            var menuItems = await _context.MenuItems.Where(m => m.CategoryId == categoryId).ToListAsync();
+            return Ok(menuItems);
+        }
+
+        // ✅ Get MenuItems by Menu ID
+        [HttpGet("GetMenuItemsByMenu/{menuId}")]
+        public async Task<IActionResult> GetMenuItemsByMenuId(Guid menuId)
+        {
+            var menuItems = await _context.MenuItems
+                .Where(mi => _context.Categories.Any(c => c.Id == mi.CategoryId && c.MenuId == menuId))
+                .ToListAsync();
+
+            return Ok(menuItems);
+        }
+
+        // ✅ Get MenuItem by ID
         [HttpGet("GetMenuItem/{id}")]
         public async Task<IActionResult> GetMenuItemById(Guid id)
         {
-            var menuItem = await _context.MenuItems
-                .Include(m => m.Category) // Include category details
-                .FirstOrDefaultAsync(m => m.Id == id);
-
-            if (menuItem == null)
-            {
-                return NotFound($"Menu item with ID {id} not found.");
-            }
-
-            return Ok(menuItem);
-        }
-
-        // ✅ Update Menu Item
-        [HttpPut("UpdateMenuItem/{id}")]
-        public async Task<IActionResult> UpdateMenuItem(Guid id, [FromBody] MenuItemDto model)
-        {
-            if (model == null || string.IsNullOrWhiteSpace(model.Name))
-            {
-                return BadRequest("Invalid menu item data.");
-            }
-
             var menuItem = await _context.MenuItems.FindAsync(id);
             if (menuItem == null)
-            {
-                return NotFound($"Menu item with ID {id} not found.");
-            }
-
-            // Check if the category exists
-            var categoryExists = await _context.Categories.AnyAsync(c => c.Id == model.CategoryId);
-            if (!categoryExists)
-            {
-                return NotFound($"Category with ID {model.CategoryId} not found.");
-            }
-
-            menuItem.Name = model.Name;
-            menuItem.Description = model.Description;
-            menuItem.ImagePath = model.ImagePath;
-            menuItem.Price = model.Price;
-            menuItem.Duration = model.Duration;
-            menuItem.Offers = model.Offers;
-            menuItem.CategoryId = model.CategoryId;
-
-            _context.MenuItems.Update(menuItem);
-            await _context.SaveChangesAsync();
-
+                return NotFound();
             return Ok(menuItem);
         }
 
-        // ✅ Delete Menu Item
+        // ✅ Update MenuItem
+        [HttpPut("UpdateMenuItem/{id}")]
+        public async Task<IActionResult> UpdateMenuItem(Guid id, [FromBody] MenuItemDto menuItemDto)
+        {
+            var menuItem = await _context.MenuItems.FindAsync(id);
+            if (menuItem == null)
+                return NotFound();
+
+            menuItem.Name = menuItemDto.Name;
+            menuItem.Description = menuItemDto.Description;
+            menuItem.ImagePath = menuItemDto.ImagePath;
+            menuItem.Price = menuItemDto.Price;
+            menuItem.Duration = menuItemDto.Duration;
+            menuItem.Offers = menuItemDto.Offers;
+            menuItem.CategoryId = menuItemDto.CategoryId;
+
+            await _context.SaveChangesAsync();
+            return NoContent();
+        }
+
+        // ✅ Delete MenuItem
         [HttpDelete("DeleteMenuItem/{id}")]
         public async Task<IActionResult> DeleteMenuItem(Guid id)
         {
             var menuItem = await _context.MenuItems.FindAsync(id);
             if (menuItem == null)
-            {
-                return NotFound($"Menu item with ID {id} not found.");
-            }
+                return NotFound();
 
             _context.MenuItems.Remove(menuItem);
             await _context.SaveChangesAsync();
-
-            return NoContent(); // 204 status code, indicating successful deletion with no content
+            return NoContent();
         }
 
-
-        // ✅ Get all menu items
-        [HttpGet("GetMenuItems")]
-        public async Task<IActionResult> GetMenuItems()
+        // ✅ Search in menu items
+        [HttpGet("SearchMenuItems")]
+        public async Task<IActionResult> SearchMenuItems(
+            [FromQuery] string? name,
+            [FromQuery] Guid? categoryId,
+            [FromQuery] decimal? minPrice,
+            [FromQuery] decimal? maxPrice,
+            [FromQuery] bool? hasOffer)
         {
-            var menuItems = await _context.MenuItems
-                .Include(m => m.Category) // Include Category details
-                .ToListAsync();
-            return Ok(menuItems);
+            var query = _context.MenuItems.AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(name))
+            {
+                query = query.Where(m => m.Name.Contains(name));
+            }
+
+            if (categoryId.HasValue)
+            {
+                query = query.Where(m => m.CategoryId == categoryId);
+            }
+
+            if (minPrice.HasValue)
+            {
+                query = query.Where(m => m.Price >= minPrice);
+            }
+
+            if (maxPrice.HasValue)
+            {
+                query = query.Where(m => m.Price <= maxPrice);
+            }
+
+            if (hasOffer.HasValue)
+            {
+                if (hasOffer.Value)
+                {
+                    query = query.Where(m => m.Offers != null && m.Offers > 0);
+                }
+                else
+                {
+                    query = query.Where(m => m.Offers == null || m.Offers == 0);
+                }
+            }
+
+            var results = await query.ToListAsync();
+
+            return Ok(results);
         }
-
-        //// Get menu items by category
-        //[HttpGet("GetItemsByCategory/{categoryId}")]
-        //public async Task<IActionResult> GetItemsByCategory(Guid categoryId)
-        //{
-        //    var items = await _context.MenuItems
-        //        .Where(m => m.CategoryId == categoryId)
-        //        .Include(m => m.Category) // Include Category details
-        //        .ToListAsync();
-
-        //    if (items == null || !items.Any())
-        //    {
-        //        return NotFound($"No menu items found for Category ID: {categoryId}");
-        //    }
-
-        //    return Ok(items);
-        //}
-
-        //// Search in menu items
-        //[HttpGet("SearchMenuItems")]
-        //public async Task<IActionResult> SearchMenuItems(
-        //    [FromQuery] string? name,
-        //    [FromQuery] Guid? categoryId,
-        //    [FromQuery] decimal? minPrice,
-        //    [FromQuery] decimal? maxPrice,
-        //    [FromQuery] bool? hasOffer)
-        //{
-        //    var query = _context.MenuItems.AsQueryable();
-
-        //    if (!string.IsNullOrWhiteSpace(name))
-        //    {
-        //        query = query.Where(m => m.Name.Contains(name));
-        //    }
-
-        //    if (categoryId.HasValue)
-        //    {
-        //        query = query.Where(m => m.CategoryId == categoryId);
-        //    }
-
-        //    if (minPrice.HasValue)
-        //    {
-        //        query = query.Where(m => m.Price >= minPrice);
-        //    }
-
-        //    if (maxPrice.HasValue)
-        //    {
-        //        query = query.Where(m => m.Price <= maxPrice);
-        //    }
-
-        //    if (hasOffer.HasValue)
-        //    {
-        //        if (hasOffer.Value)
-        //        {
-        //            query = query.Where(m => m.Offers != null && m.Offers > 0);
-        //        }
-        //        else
-        //        {
-        //            query = query.Where(m => m.Offers == null || m.Offers == 0);
-        //        }
-        //    }
-
-        //    var results = await query.ToListAsync();
-
-        //    return Ok(results);
-        //}
     }
 }

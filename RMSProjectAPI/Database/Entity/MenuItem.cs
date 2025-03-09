@@ -15,5 +15,7 @@ namespace RMSProjectAPI.Database.Entity
         public Guid CategoryId { get; set; }
         [ForeignKey(nameof(CategoryId))]
         public virtual Category Category { get; set; }
+
+        public virtual List<Component> Components { get; set; } // Link to components
     }
 }

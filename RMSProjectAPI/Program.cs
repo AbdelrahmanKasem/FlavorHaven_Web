@@ -17,11 +17,17 @@ namespace RMSProjectAPI
             builder.Services.AddDbContext<AppDbContext>(o =>
             {
                 // Online Database
-                o.UseSqlServer("Server=db14415.databaseasp.net; Database=db14415; User Id=db14415; Password=5Tj@z8+M3_Ex; Encrypt=False; MultipleActiveResultSets=True;");
+                //o.UseSqlServer("Server=db14415.databaseasp.net; Database=db14415; User Id=db14415; Password=5Tj@z8+M3_Ex; Encrypt=False; MultipleActiveResultSets=True;");
 
                 // Local Database
-                //o.UseSqlServer("Data Source=.;Initial Catalog=DB;Integrated Security=True;Encrypt=True;Trust Server Certificate=True");
+                o.UseSqlServer("Data Source=.;Initial Catalog=DB;Integrated Security=True;Encrypt=True;Trust Server Certificate=True");
             });
+
+            // QR Code Service
+            builder.Services.AddScoped<TableRepository>();
+            builder.Services.AddSingleton<QRCodeService>();
+
+
             // Add services to the container.
             builder.Services.AddIdentity<User, IdentityRole>()
                      .AddEntityFrameworkStores<AppDbContext>()

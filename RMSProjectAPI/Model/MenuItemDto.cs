@@ -12,7 +12,6 @@ namespace RMSProjectAPI.Model
         public decimal Price { get; set; }
         public int Duration { get; set; }
         public decimal? Offers { get; set; }
-
         public Guid CategoryId { get; set; }
-     }
+    }
 }

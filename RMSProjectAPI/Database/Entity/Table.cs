@@ -5,5 +5,10 @@
         public Guid Id { get; set; }
         public bool IsAvailable { get; set; }
         public int Capacity { get; set; }
+        public string QrCodeUrl { get; set; }
+        public byte[] QrCodeImage { get; set; }
+
+        public virtual List<Booking> Bookings { get; set; } = new List<Booking>();
+        public virtual List<GroupOrder> GroupOrders { get; set; } = new List<GroupOrder>();
     }
 }

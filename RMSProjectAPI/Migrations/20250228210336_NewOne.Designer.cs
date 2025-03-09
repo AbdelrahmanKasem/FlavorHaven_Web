@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using RMSProjectAPI.Database;
 
@@ -11,9 +12,11 @@ using RMSProjectAPI.Database;
 namespace RMSProjectAPI.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250228210336_NewOne")]
+    partial class NewOne
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -21,66 +24,6 @@ namespace RMSProjectAPI.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
-
-            modelBuilder.Entity("GroupOrder", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("CreatorId")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("Status")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<Guid>("TableId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<decimal>("TotalPrice")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CreatorId");
-
-                    b.HasIndex("TableId");
-
-                    b.ToTable("GroupOrder");
-                });
-
-            modelBuilder.Entity("GroupOrderItem", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("GroupOrderId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("MenuItemId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Note")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("Quantity")
-                        .HasColumnType("int");
-
-                    b.Property<string>("SpicyLevel")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("GroupOrderId");
-
-                    b.HasIndex("MenuItemId");
-
-                    b.ToTable("GroupOrderItem");
-                });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
                 {
@@ -251,9 +194,6 @@ namespace RMSProjectAPI.Migrations
                     b.Property<string>("Country")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("GoogleMapsLocation")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("ManagerId")
                         .HasColumnType("nvarchar(450)");
 
@@ -276,9 +216,6 @@ namespace RMSProjectAPI.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("MenuId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<string>("Name")
                         .HasColumnType("nvarchar(max)");
 
@@ -286,8 +223,6 @@ namespace RMSProjectAPI.Migrations
                         .HasColumnType("decimal(18,2)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("MenuId");
 
                     b.ToTable("Categories");
                 });
@@ -300,9 +235,6 @@ namespace RMSProjectAPI.Migrations
 
                     b.Property<DateOnly>("ExpirationDate")
                         .HasColumnType("date");
-
-                    b.Property<Guid>("MenuItemId")
-                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Name")
                         .HasColumnType("nvarchar(max)");
@@ -318,8 +250,6 @@ namespace RMSProjectAPI.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("MenuItemId");
-
                     b.ToTable("Components");
                 });
 
@@ -329,15 +259,10 @@ namespace RMSProjectAPI.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("BranchId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<decimal?>("Offers")
                         .HasColumnType("decimal(18,2)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("BranchId");
 
                     b.ToTable("Menus");
                 });
@@ -462,12 +387,6 @@ namespace RMSProjectAPI.Migrations
                     b.Property<bool>("IsAvailable")
                         .HasColumnType("bit");
 
-                    b.Property<byte[]>("QrCodeImage")
-                        .HasColumnType("varbinary(max)");
-
-                    b.Property<string>("QrCodeUrl")
-                        .HasColumnType("nvarchar(max)");
-
                     b.HasKey("Id");
 
                     b.ToTable("Tables");
@@ -568,42 +487,6 @@ namespace RMSProjectAPI.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
-            modelBuilder.Entity("GroupOrder", b =>
-                {
-                    b.HasOne("RMSProjectAPI.Database.Entity.User", "Creator")
-                        .WithMany()
-                        .HasForeignKey("CreatorId");
-
-                    b.HasOne("RMSProjectAPI.Database.Entity.Table", "Table")
-                        .WithMany("GroupOrders")
-                        .HasForeignKey("TableId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Creator");
-
-                    b.Navigation("Table");
-                });
-
-            modelBuilder.Entity("GroupOrderItem", b =>
-                {
-                    b.HasOne("GroupOrder", "GroupOrder")
-                        .WithMany("GroupOrderItems")
-                        .HasForeignKey("GroupOrderId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("RMSProjectAPI.Database.Entity.MenuItem", "MenuItem")
-                        .WithMany()
-                        .HasForeignKey("MenuItemId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("GroupOrder");
-
-                    b.Navigation("MenuItem");
-                });
-
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
@@ -662,7 +545,7 @@ namespace RMSProjectAPI.Migrations
                         .HasForeignKey("CustomerId");
 
                     b.HasOne("RMSProjectAPI.Database.Entity.Table", "Table")
-                        .WithMany("Bookings")
+                        .WithMany()
                         .HasForeignKey("TableId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -681,43 +564,10 @@ namespace RMSProjectAPI.Migrations
                     b.Navigation("Manager");
                 });
 
-            modelBuilder.Entity("RMSProjectAPI.Database.Entity.Category", b =>
-                {
-                    b.HasOne("RMSProjectAPI.Database.Entity.Menu", "Menu")
-                        .WithMany("Categories")
-                        .HasForeignKey("MenuId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Menu");
-                });
-
-            modelBuilder.Entity("RMSProjectAPI.Database.Entity.Component", b =>
-                {
-                    b.HasOne("RMSProjectAPI.Database.Entity.MenuItem", "MenuItem")
-                        .WithMany("Components")
-                        .HasForeignKey("MenuItemId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("MenuItem");
-                });
-
-            modelBuilder.Entity("RMSProjectAPI.Database.Entity.Menu", b =>
-                {
-                    b.HasOne("RMSProjectAPI.Database.Entity.Branch", "Branch")
-                        .WithMany("Menus")
-                        .HasForeignKey("BranchId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Branch");
-                });
-
             modelBuilder.Entity("RMSProjectAPI.Database.Entity.MenuItem", b =>
                 {
                     b.HasOne("RMSProjectAPI.Database.Entity.Category", "Category")
-                        .WithMany("MenuItems")
+                        .WithMany()
                         .HasForeignKey("CategoryId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -741,38 +591,6 @@ namespace RMSProjectAPI.Migrations
                         .HasForeignKey("SupervisorId");
 
                     b.Navigation("Supervisor");
-                });
-
-            modelBuilder.Entity("GroupOrder", b =>
-                {
-                    b.Navigation("GroupOrderItems");
-                });
-
-            modelBuilder.Entity("RMSProjectAPI.Database.Entity.Branch", b =>
-                {
-                    b.Navigation("Menus");
-                });
-
-            modelBuilder.Entity("RMSProjectAPI.Database.Entity.Category", b =>
-                {
-                    b.Navigation("MenuItems");
-                });
-
-            modelBuilder.Entity("RMSProjectAPI.Database.Entity.Menu", b =>
-                {
-                    b.Navigation("Categories");
-                });
-
-            modelBuilder.Entity("RMSProjectAPI.Database.Entity.MenuItem", b =>
-                {
-                    b.Navigation("Components");
-                });
-
-            modelBuilder.Entity("RMSProjectAPI.Database.Entity.Table", b =>
-                {
-                    b.Navigation("Bookings");
-
-                    b.Navigation("GroupOrders");
                 });
 
             modelBuilder.Entity("RMSProjectAPI.Database.Entity.User", b =>
