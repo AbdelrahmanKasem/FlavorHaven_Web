@@ -21,6 +21,6 @@ namespace RMSProjectAPI.Model
         public string GoogleMapsLocation { get; set; }
 
         [Required]
-        public string ManagerId { get; set; }
+        public Guid ManagerId { get; set; }
     }
 }

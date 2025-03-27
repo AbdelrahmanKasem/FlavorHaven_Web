@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace RMSProjectAPI.Database.Entity
 {
-    public class User: IdentityUser
+    public class User: IdentityUser<Guid>
     {
         public string FirstName { get; set; }
         public string LastName { get; set; }

@@ -9,10 +9,11 @@ namespace RMSProjectAPI.Database.Entity
         public Guid Id { get; set; }
         public decimal? Offers { get; set; }
 
+        [Required]
         public Guid BranchId { get; set; }
         [ForeignKey(nameof(BranchId))]
         public virtual Branch Branch { get; set; }
 
-        public virtual List<Category> Categories { get; set; } // Link to categories
+        public virtual List<Category> Categories { get; set; }
     }
 }

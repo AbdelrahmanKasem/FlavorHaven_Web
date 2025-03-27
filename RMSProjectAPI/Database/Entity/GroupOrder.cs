@@ -1,20 +1,19 @@
-﻿using RMSProjectAPI.Database.Entity;
-using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.ComponentModel.DataAnnotations.Schema;
+using System.ComponentModel.DataAnnotations;
 
-public class GroupOrder
+namespace RMSProjectAPI.Database.Entity
 {
-    public Guid Id { get; set; }
-    public DateTime CreatedAt { get; set; }
-    public string CreatorId { get; set; } // The user who created the group order
-    [ForeignKey(nameof(CreatorId))]
-    public virtual User Creator { get; set; }
+    public class GroupOrder
+    {
+        [Key]
+        public Guid Id { get; set; }
+        public DateTime CreatedAt { get; set; } = DateTime.Now;
+        public bool IsSubmitted { get; set; } = false;
 
-    public Guid TableId { get; set; } // The table associated with the group order
-    [ForeignKey(nameof(TableId))]
-    public virtual Table Table { get; set; }
+        public Guid AdminUserId { get; set; }
+        [ForeignKey(nameof(AdminUserId))]
+        public virtual User AdminUser { get; set; }
 
-    public decimal TotalPrice { get; set; }
-    public string Status { get; set; } // e.g., "Pending", "Paid", "Completed"
-
-    public virtual List<GroupOrderItem> GroupOrderItems { get; set; } // Items in the group order
+        public virtual List<GroupOrderMember> Members { get; set; } = new List<GroupOrderMember>();
+    }
 }

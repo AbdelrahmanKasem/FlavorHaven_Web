@@ -3,14 +3,18 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace RMSProjectAPI.Database.Entity
 {
-    public class PhoneNumber
+    public class FavoriteMeal
     {
-        [Key]
         public Guid Id { get; set; }
-        public string Number { get; set; }
+
         [Required]
         public Guid UserId { get; set; }
         [ForeignKey(nameof(UserId))]
         public virtual User User { get; set; }
+
+        [Required]
+        public Guid MenuItemId { get; set; }
+        [ForeignKey(nameof(MenuItemId))]
+        public virtual MenuItem MenuItem { get; set; }
     }
 }

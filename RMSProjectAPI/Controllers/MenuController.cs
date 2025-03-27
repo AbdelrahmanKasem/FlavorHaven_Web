@@ -98,7 +98,6 @@ namespace RMSProjectAPI.Controllers
             {
                 Id = Guid.NewGuid(),
                 Name = categoryDto.Name,
-                Offers = categoryDto.Offers,
                 MenuId = categoryDto.MenuId
             };
 
@@ -143,7 +142,6 @@ namespace RMSProjectAPI.Controllers
                 return NotFound();
 
             category.Name = categoryDto.Name;
-            category.Offers = categoryDto.Offers;
             category.MenuId = categoryDto.MenuId;
 
             await _context.SaveChangesAsync();
@@ -305,5 +303,28 @@ namespace RMSProjectAPI.Controllers
 
             return Ok(results);
         }
+
+        // ✅ Get Top 10 Sold Dishes
+        [HttpGet("TopSoldDishes")]
+        public async Task<IActionResult> GetTopSoldDishes()
+        {
+            var topDishes = await _context.MenuItems
+                .Select(m => new
+                {
+                    m.Id,
+                    m.Name,
+                    m.ImagePath,
+                    m.Price,
+                    TotalSold = _context.OrderItems.Where(oi => oi.Order.Status == OrderStatus.Completed && oi.Order.Status != OrderStatus.Cancelled && oi.OrderId != Guid.Empty)
+                                                   .Where(oi => oi.OrderId != Guid.Empty && oi.Customizations.Count == 0)
+                                                   .Sum(oi => oi.Quantity)
+                })
+                .OrderByDescending(m => m.TotalSold)
+                .Take(10)
+                .ToListAsync();
+
+            return Ok(topDishes);
+        }
+
     }
 }

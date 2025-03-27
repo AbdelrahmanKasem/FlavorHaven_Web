@@ -5,6 +5,7 @@ using Microsoft.IdentityModel.Tokens;
 using RMSProjectAPI.Database;
 using RMSProjectAPI.Database.Entity;
 using System.Text;
+using RMSProjectAPI.Hubs;
 
 namespace RMSProjectAPI
 {
@@ -26,12 +27,14 @@ namespace RMSProjectAPI
             // QR Code Service
             builder.Services.AddScoped<TableRepository>();
             builder.Services.AddSingleton<QRCodeService>();
+            builder.Services.AddSignalR();
 
 
             // Add services to the container.
-            builder.Services.AddIdentity<User, IdentityRole>()
+            builder.Services.AddIdentity<User, IdentityRole<Guid>>()
                      .AddEntityFrameworkStores<AppDbContext>()
                      .AddDefaultTokenProviders();
+
             var jwtSettings = builder.Configuration.GetSection("JwtSettings");
             var key = Encoding.UTF8.GetBytes(jwtSettings["Secret"]);
 
@@ -64,7 +67,6 @@ namespace RMSProjectAPI
                 });
             });
             builder.Services.AddControllers();
-            // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
@@ -86,6 +88,8 @@ namespace RMSProjectAPI
             app.UseCors();
 
             app.MapControllers();
+
+            app.MapHub<ChatHub>("/chatHub");
 
             app.Run();
         }

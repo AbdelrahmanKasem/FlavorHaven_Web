@@ -11,7 +11,7 @@ namespace RMSProjectAPI.Database.Entity
         public string City { get; set; }
         public string Street { get; set; }
 
-        public string SupervisorId { get; set; }
+        public Guid SupervisorId { get; set; }
         [ForeignKey(nameof(SupervisorId))]
         public virtual User Supervisor { get; set; }
     }

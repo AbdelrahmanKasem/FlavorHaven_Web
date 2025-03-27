@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -7,7 +6,6 @@ using Microsoft.IdentityModel.Tokens;
 using RMSProjectAPI.Database;
 using RMSProjectAPI.Database.Entity;
 using RMSProjectAPI.Model;
-using System.Data;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
@@ -16,13 +14,27 @@ namespace RMSProjectAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class UserController(IConfiguration configuration,AppDbContext appDbContext,UserManager<User> userManager, RoleManager<IdentityRole> roleManager, SignInManager<User> signInManager) : ControllerBase
+    public class UserController : ControllerBase
     {
-        public AppDbContext _appDbContext = appDbContext;
-        public UserManager<User> _userManager = userManager;
-        private readonly SignInManager<User> _signInManager = signInManager;
-        private readonly RoleManager<IdentityRole> _roleManager = roleManager;
-        private readonly IConfiguration _configuration = configuration;
+        private readonly IConfiguration _configuration;
+        private readonly AppDbContext _appDbContext;
+        private readonly UserManager<User> _userManager;
+        private readonly RoleManager<IdentityRole<Guid>> _roleManager;
+        private readonly SignInManager<User> _signInManager;
+
+        public UserController(
+            IConfiguration configuration,
+            AppDbContext appDbContext,
+            UserManager<User> userManager,
+            RoleManager<IdentityRole<Guid>> roleManager,
+            SignInManager<User> signInManager)
+        {
+            _configuration = configuration;
+            _appDbContext = appDbContext;
+            _userManager = userManager;
+            _roleManager = roleManager;
+            _signInManager = signInManager;
+        }
 
         // ✅ Register API
         [HttpPost("Register")]
@@ -42,7 +54,6 @@ namespace RMSProjectAPI.Controllers
                     Country = userDto.Country,
                     City = userDto.City,
                     Street = userDto.Street,
-
                     Status = userDto.Status,
                     Role = userDto.Role
                 };
@@ -53,12 +64,10 @@ namespace RMSProjectAPI.Controllers
                     return BadRequest(result.Errors);
                 }
                 await _userManager.AddToRoleAsync(user, "admin");
-
-        }
-        else
+            }
+            else
             {
-                return BadRequest("User is exist");
-
+                return BadRequest("User already exists");
             }
 
             return Ok(userDto);
@@ -85,33 +94,31 @@ namespace RMSProjectAPI.Controllers
         }
 
         // ✅ Add Role API
-        //[HttpPost("AddRole")]
+        [HttpPost("AddRole")]
         //[Authorize(Roles = "admin")]
-        //public async Task<IActionResult> AddRole([FromBody] string roleName)
-        //{
-        //    if (string.IsNullOrWhiteSpace(roleName))
-        //    {
-        //        return BadRequest("Role name cannot be empty.");
-        //    }
+        public async Task<IActionResult> AddRole([FromBody] string roleName)
+        {
+            if (string.IsNullOrWhiteSpace(roleName))
+            {
+                return BadRequest("Role name cannot be empty.");
+            }
 
-        //    var roleExists = await _roleManager.RoleExistsAsync(roleName);
-        //    if (roleExists)
-        //    {
-        //        return BadRequest("Role already exists.");
-        //    }
+            var roleExists = await _roleManager.RoleExistsAsync(roleName);
+            if (roleExists)
+            {
+                return BadRequest("Role already exists.");
+            }
 
-        //    var result = await _roleManager.CreateAsync(new IdentityRole(roleName));
-        //    if (result.Succeeded)
-        //    {
-        //        return Ok($"Role '{roleName}' created successfully.");
-        //    }
+            var result = await _roleManager.CreateAsync(new IdentityRole<Guid>(roleName));
+            if (result.Succeeded)
+            {
+                return Ok($"Role '{roleName}' created successfully.");
+            }
 
-        //    return BadRequest("Failed to create role.");
-        //}
+            return BadRequest("Failed to create role.");
+        }
 
-
-        // ✅ Get All of Users
-
+        // ✅ Get All Users
         [HttpGet("GetUsers")]
         [Authorize]
         public ActionResult GetAllUsers()
@@ -125,13 +132,12 @@ namespace RMSProjectAPI.Controllers
             var roles = await _userManager.GetRolesAsync(user);
             var claims = new[]
             {
-            new Claim(JwtRegisteredClaimNames.Sub, user.Id),
-            new Claim(JwtRegisteredClaimNames.Email, user.Email),
-            new Claim(ClaimTypes.Name, user.UserName),
-            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
-        };
+                new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
+                new Claim(JwtRegisteredClaimNames.Email, user.Email),
+                new Claim(ClaimTypes.Name, user.UserName),
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+            };
 
-            // Add role claims
             foreach (var role in roles)
             {
                 claims = claims.Append(new Claim(ClaimTypes.Role, role)).ToArray();
@@ -180,7 +186,7 @@ namespace RMSProjectAPI.Controllers
             user.Gender = updatedUser.Gender;
             user.Country = updatedUser.Country;
             user.City = updatedUser.City;
-            user.Street = updatedUser.Region;
+            user.Street = updatedUser.Street;
             user.Status = updatedUser.Status;
 
             var result = await _userManager.UpdateAsync(user);
@@ -215,7 +221,7 @@ namespace RMSProjectAPI.Controllers
         // ✅ Change Password
         [HttpPost("ChangePassword")]
         [Authorize]
-        public async Task<IActionResult> ChangePassword([FromBody]ChangePasswordDto model)
+        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordDto model)
         {
             var user = await _userManager.FindByEmailAsync(model.Email);
             if (user == null)
@@ -234,7 +240,7 @@ namespace RMSProjectAPI.Controllers
 
         // ✅ Assign role to user
         [HttpPost("AssignRole")]
-        [Authorize(Roles = "admin")]
+        //[Authorize(Roles = "admin")]
         public async Task<IActionResult> AssignRole([FromBody] AssignRoleDto model)
         {
             var user = await _userManager.FindByEmailAsync(model.Email);
@@ -271,14 +277,5 @@ namespace RMSProjectAPI.Controllers
             var newToken = await GenerateJwtToken(user);
             return Ok(new { token = newToken });
         }
-
-        // ================== Remaining APIs ==============
-        // Email Verification
-        // Forget Password
     }
 }
-
-
-// To Do
-
-// 1- (Create (with generating QR Codes)/ Retrieve/ Update/ Delete)
