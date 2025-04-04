@@ -12,8 +12,8 @@ using RMSProjectAPI.Database;
 namespace RMSProjectAPI.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250327191406_FixingTable")]
-    partial class FixingTable
+    [Migration("20250404111046_addBookingController")]
+    partial class addBookingController
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -162,8 +162,8 @@ namespace RMSProjectAPI.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<DateTime>("BookingTime")
-                        .HasColumnType("datetime2");
+                    b.Property<Guid>("BranchId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid>("CustomerId")
                         .HasColumnType("uniqueidentifier");
@@ -171,13 +171,21 @@ namespace RMSProjectAPI.Migrations
                     b.Property<DateTime>("Date")
                         .HasColumnType("datetime2");
 
+                    b.Property<int>("GuestCount")
+                        .HasColumnType("int");
+
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
                     b.Property<Guid>("TableId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<TimeSpan>("Time")
+                        .HasColumnType("time");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("BranchId");
 
                     b.HasIndex("CustomerId");
 
@@ -337,6 +345,35 @@ namespace RMSProjectAPI.Migrations
                     b.HasIndex("MenuItemId");
 
                     b.ToTable("Components");
+                });
+
+            modelBuilder.Entity("RMSProjectAPI.Database.Entity.ContactForm", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Email")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("FirstName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsPrivacyPolicyAccepted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("LastName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Message")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PhoneNumber")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ContactForms");
                 });
 
             modelBuilder.Entity("RMSProjectAPI.Database.Entity.EmployeeAttendance", b =>
@@ -908,6 +945,12 @@ namespace RMSProjectAPI.Migrations
 
             modelBuilder.Entity("RMSProjectAPI.Database.Entity.Booking", b =>
                 {
+                    b.HasOne("RMSProjectAPI.Database.Entity.Branch", "Branch")
+                        .WithMany()
+                        .HasForeignKey("BranchId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("RMSProjectAPI.Database.Entity.User", "Customer")
                         .WithMany()
                         .HasForeignKey("CustomerId")
@@ -919,6 +962,8 @@ namespace RMSProjectAPI.Migrations
                         .HasForeignKey("TableId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.Navigation("Branch");
 
                     b.Navigation("Customer");
 

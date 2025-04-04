@@ -12,8 +12,8 @@ using RMSProjectAPI.Database;
 namespace RMSProjectAPI.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250327190226_InitDatabase")]
-    partial class InitDatabase
+    [Migration("20250404031940_AddContactForm")]
+    partial class AddContactForm
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -337,6 +337,35 @@ namespace RMSProjectAPI.Migrations
                     b.HasIndex("MenuItemId");
 
                     b.ToTable("Components");
+                });
+
+            modelBuilder.Entity("RMSProjectAPI.Database.Entity.ContactForm", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Email")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("FirstName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsPrivacyPolicyAccepted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("LastName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Message")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PhoneNumber")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ContactForms");
                 });
 
             modelBuilder.Entity("RMSProjectAPI.Database.Entity.EmployeeAttendance", b =>
@@ -737,9 +766,6 @@ namespace RMSProjectAPI.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("BranchId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<int>("Capacity")
                         .HasColumnType("int");
 
@@ -753,8 +779,6 @@ namespace RMSProjectAPI.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("BranchId");
 
                     b.ToTable("Tables");
                 });
@@ -1171,17 +1195,6 @@ namespace RMSProjectAPI.Migrations
                         .IsRequired();
 
                     b.Navigation("Supervisor");
-                });
-
-            modelBuilder.Entity("RMSProjectAPI.Database.Entity.Table", b =>
-                {
-                    b.HasOne("RMSProjectAPI.Database.Entity.Branch", "Branch")
-                        .WithMany()
-                        .HasForeignKey("BranchId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Branch");
                 });
 
             modelBuilder.Entity("RMSProjectAPI.Database.Entity.User", b =>

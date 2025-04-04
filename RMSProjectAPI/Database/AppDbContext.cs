@@ -13,6 +13,7 @@ namespace RMSProjectAPI.Database
         public DbSet<Chat> Chats { get; set; }
         public DbSet<Cart> Carts { get; set; }
         public DbSet<Component> Components { get; set; }
+        public DbSet<ContactForm> ContactForms { get; set; }
         public DbSet<EmployeeAttendance> EmployeeAttendances { get; set; }
         public DbSet<FavoriteMeal> FavoriteMeals { get; set; }
         public DbSet<GroupOrder> GroupOrders { get; set; }
