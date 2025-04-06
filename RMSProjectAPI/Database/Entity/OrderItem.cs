@@ -14,6 +14,10 @@ namespace RMSProjectAPI.Database.Entity
         public string? Note { get; set; }
         public SpicyLevel SpicyLevel { get; set; }
         public decimal Price { get; set; }
+
+        [Required]
+        public Guid MenuItemId { get; set; }
+
         [Required]
         public Guid OrderId { get; set; }
         [ForeignKey(nameof(OrderId))]

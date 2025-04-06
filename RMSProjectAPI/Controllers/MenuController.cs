@@ -32,7 +32,6 @@ namespace RMSProjectAPI.Controllers
             {
                 Id = Guid.NewGuid(),
                 Offers = menuDto.Offers,
-                BranchId = menuDto.BranchId
             };
 
             await _context.Menus.AddAsync(menu);
@@ -68,7 +67,6 @@ namespace RMSProjectAPI.Controllers
                 return NotFound();
 
             menu.Offers = menuDto.Offers;
-            menu.BranchId = menuDto.BranchId;
 
             await _context.SaveChangesAsync();
             return NoContent();

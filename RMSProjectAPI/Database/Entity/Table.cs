@@ -17,6 +17,5 @@ namespace RMSProjectAPI.Database.Entity
         //public virtual Branch Branch { get; set; }
 
         public virtual List<Booking> Bookings { get; set; } = new List<Booking>();
-        public virtual List<GroupOrder> GroupOrders { get; set; } = new List<GroupOrder>();
     }
 }

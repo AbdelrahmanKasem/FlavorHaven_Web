@@ -8,16 +8,12 @@ namespace RMSProjectAPI.Database
     public class AppDbContext : IdentityDbContext<User,IdentityRole<Guid>, Guid>
     {
         public DbSet<Booking> Bookings { get; set; }
-        public DbSet<Branch> Branches { get; set; }
         public DbSet<Category> Categories { get; set; }
         public DbSet<Chat> Chats { get; set; }
         public DbSet<Cart> Carts { get; set; }
         public DbSet<Component> Components { get; set; }
         public DbSet<ContactForm> ContactForms { get; set; }
-        public DbSet<EmployeeAttendance> EmployeeAttendances { get; set; }
         public DbSet<FavoriteMeal> FavoriteMeals { get; set; }
-        public DbSet<GroupOrder> GroupOrders { get; set; }
-        public DbSet<GroupOrderMember> GroupOrderMembers { get; set; }
         public DbSet<Location> Locations { get; set; }
         public DbSet<Menu> Menus { get; set; }
         public DbSet<MenuItem> MenuItems { get; set; }

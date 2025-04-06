@@ -1,8 +1,10 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿// Controllers/OrderController.cs
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RMSProjectAPI.Database;
 using RMSProjectAPI.Database.Entity;
-using RMSProjectAPI.Model;
+using RMSProjectAPI.DTOs;
+using System.Net;
 
 namespace RMSProjectAPI.Controllers
 {
@@ -17,74 +19,170 @@ namespace RMSProjectAPI.Controllers
             _context = context;
         }
 
-        // GET: api/orders/{id}
-        [HttpGet("GetOrder/{id}")]
-        public IActionResult GetOrder(Guid id)
+        // GET: api/Order
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<OrderDto>>> GetOrders()
         {
-            var order = _context.Orders
-                .Where(o => o.Id == id)
-                .Select(o => new OrderDto
-                {
-                    Id = o.Id,
-                    OrderDate = o.OrderDate,
-                    Status = o.Status,
-                    Type = o.Type,
-                    Price = o.Price,
-                    PaymentSystem = o.PaymentSystem,
-                    Note = o.Note,
-                    CustomerId = o.CustomerId,
-                    OrderItems = o.OrderItems.Select(oi => new OrderItemDto
-                    {
-                        Id = oi.Id,
-                        Quantity = oi.Quantity,
-                        Note = oi.Note,
-                        SpicyLevel = oi.SpicyLevel,
-                        Price = oi.Price,
-                        Customizations = oi.Customizations.Select(c => new OrderItemCustomizationDto
-                        {
-                            Id = c.Id,
-                            Name = c.Name,
-                            ExtraPrice = c.ExtraPrice
-                        }).ToList()
-                    }).ToList()
-                })
-                .FirstOrDefault();
+            var orders = await _context.Orders
+                .Include(o => o.OrderItems)
+                    .ThenInclude(oi => oi.Customizations)
+                .Include(o => o.Customer)
+                .ToListAsync();
+
+            return orders.Select(o => MapToOrderDto(o)).ToList();
+        }
+
+        // GET: api/Order/5
+        [HttpGet("{id}")]
+        public async Task<ActionResult<OrderDto>> GetOrder(Guid id)
+        {
+            var order = await _context.Orders
+                .Include(o => o.OrderItems)
+                    .ThenInclude(oi => oi.Customizations)
+                .Include(o => o.Customer)
+                .FirstOrDefaultAsync(o => o.Id == id);
 
             if (order == null)
             {
-                return NotFound($"Order with ID {id} not found.");
+                return NotFound();
             }
 
-            return Ok(order);
+            return MapToOrderDto(order);
         }
 
-        // POST: api/orders
-        [HttpPost("CreateOrder")]
-        public IActionResult CreateOrder([FromBody] OrderDto orderDto)
+        // POST: api/Order
+        [HttpPost]
+        public async Task<ActionResult<OrderDto>> CreateOrder(CreateOrderDto createOrderDto)
         {
-            if (!ModelState.IsValid)
+            if (!Enum.TryParse<OrderType>(createOrderDto.Type, out var orderType))
             {
-                return BadRequest(ModelState);
+                return BadRequest("Invalid order type");
             }
 
             var order = new Order
             {
-                Id = orderDto.Id,
-                OrderDate = orderDto.OrderDate,
-                Status = orderDto.Status,
-                Type = orderDto.Type,
-                Price = orderDto.Price,
-                PaymentSystem = orderDto.PaymentSystem,
-                Note = orderDto.Note,
-                CustomerId = orderDto.CustomerId,
-                OrderItems = orderDto.OrderItems.Select(oi => new OrderItem
+                Id = Guid.NewGuid(),
+                OrderDate = DateTime.UtcNow,
+                Status = OrderStatus.Pending,
+                Type = orderType,
+                PaymentSystem = createOrderDto.PaymentSystem,
+                Note = createOrderDto.Note,
+                CustomerId = createOrderDto.CustomerId,
+                OrderItems = new List<OrderItem>()
+            };
+
+            decimal totalPrice = 0;
+
+            foreach (var itemDto in createOrderDto.OrderItems)
+            {
+                if (!Enum.TryParse<SpicyLevel>(itemDto.SpicyLevel, out var spicyLevel))
+                {
+                    return BadRequest("Invalid spicy level");
+                }
+
+                var menuItem = await _context.MenuItems.FindAsync(itemDto.MenuItemId);
+                if (menuItem == null)
+                {
+                    return BadRequest($"MenuItem with id {itemDto.MenuItemId} not found");
+                }
+
+                var orderItem = new OrderItem
+                {
+                    Id = Guid.NewGuid(),
+                    Quantity = itemDto.Quantity,
+                    Note = itemDto.Note,
+                    SpicyLevel = spicyLevel,
+                    Price = menuItem.Price,
+                    Customizations = new List<OrderItemCustomization>()
+                };
+
+                // Calculate price with customizations
+                decimal itemPrice = menuItem.Price * itemDto.Quantity;
+                foreach (var customizationDto in itemDto.Customizations)
+                {
+                    orderItem.Customizations.Add(new OrderItemCustomization
+                    {
+                        Id = Guid.NewGuid(),
+                        Name = customizationDto.Name,
+                        ExtraPrice = customizationDto.ExtraPrice,
+                        OrderItemId = orderItem.Id
+                    });
+                    itemPrice += customizationDto.ExtraPrice * itemDto.Quantity;
+                }
+
+                orderItem.Price = itemPrice;
+                totalPrice += itemPrice;
+
+                order.OrderItems.Add(orderItem);
+            }
+
+            order.Price = totalPrice;
+
+            _context.Orders.Add(order);
+            await _context.SaveChangesAsync();
+
+            return CreatedAtAction(nameof(GetOrder), new { id = order.Id }, MapToOrderDto(order));
+        }
+
+        // PUT: api/Order/5/status
+        [HttpPut("{id}/status")]
+        public async Task<IActionResult> UpdateOrderStatus(Guid id, UpdateOrderStatusDto updateOrderStatusDto)
+        {
+            if (!Enum.TryParse<OrderStatus>(updateOrderStatusDto.Status, out var orderStatus))
+            {
+                return BadRequest("Invalid order status");
+            }
+
+            var order = await _context.Orders.FindAsync(id);
+            if (order == null)
+            {
+                return NotFound();
+            }
+
+            order.Status = orderStatus;
+            await _context.SaveChangesAsync();
+
+            return NoContent();
+        }
+
+        // DELETE: api/Order/5
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteOrder(Guid id)
+        {
+            var order = await _context.Orders.FindAsync(id);
+            if (order == null)
+            {
+                return NotFound();
+            }
+
+            _context.Orders.Remove(order);
+            await _context.SaveChangesAsync();
+
+            return NoContent();
+        }
+
+        private OrderDto MapToOrderDto(Order order)
+        {
+            return new OrderDto
+            {
+                Id = order.Id,
+                OrderDate = order.OrderDate,
+                Status = order.Status.ToString(),
+                Type = order.Type.ToString(),
+                Price = order.Price,
+                PaymentSystem = order.PaymentSystem,
+                Note = order.Note,
+                CustomerId = order.CustomerId,
+                OrderItems = order.OrderItems.Select(oi => new OrderItemDto
                 {
                     Id = oi.Id,
                     Quantity = oi.Quantity,
                     Note = oi.Note,
-                    SpicyLevel = oi.SpicyLevel,
+                    SpicyLevel = oi.SpicyLevel.ToString(),
                     Price = oi.Price,
-                    Customizations = oi.Customizations.Select(c => new OrderItemCustomization
+                    MenuItemId = oi.MenuItemId,
+                    MenuItemName = _context.MenuItems.FirstOrDefault(mi => mi.Id == oi.MenuItemId)?.Name ?? "Unknown",
+                    Customizations = oi.Customizations.Select(c => new OrderItemCustomizationDto
                     {
                         Id = c.Id,
                         Name = c.Name,
@@ -92,108 +190,6 @@ namespace RMSProjectAPI.Controllers
                     }).ToList()
                 }).ToList()
             };
-
-            _context.Orders.Add(order);
-            _context.SaveChanges();
-
-            return CreatedAtAction(nameof(GetOrder), new { id = order.Id }, order);
-        }
-
-        // PUT: api/orders/{id}
-        [HttpPut("UpdateOrder/{id}")]
-        public IActionResult UpdateOrder(Guid id, [FromBody] OrderDto orderDto)
-        {
-            if (!ModelState.IsValid || id != orderDto.Id)
-            {
-                return BadRequest();
-            }
-
-            var existingOrder = _context.Orders.Find(id);
-            if (existingOrder == null)
-            {
-                return NotFound($"Order with ID {id} not found.");
-            }
-
-            existingOrder.OrderDate = orderDto.OrderDate;
-            existingOrder.Status = orderDto.Status;
-            existingOrder.Type = orderDto.Type;
-            existingOrder.Price = orderDto.Price;
-            existingOrder.PaymentSystem = orderDto.PaymentSystem;
-            existingOrder.Note = orderDto.Note;
-            existingOrder.CustomerId = orderDto.CustomerId;
-
-            // Update order items
-            _context.OrderItems.RemoveRange(existingOrder.OrderItems);
-            existingOrder.OrderItems = orderDto.OrderItems.Select(oi => new OrderItem
-            {
-                Id = oi.Id,
-                Quantity = oi.Quantity,
-                Note = oi.Note,
-                SpicyLevel = oi.SpicyLevel,
-                Price = oi.Price,
-                Customizations = oi.Customizations.Select(c => new OrderItemCustomization
-                {
-                    Id = c.Id,
-                    Name = c.Name,
-                    ExtraPrice = c.ExtraPrice
-                }).ToList()
-            }).ToList();
-
-            _context.SaveChanges();
-
-            return NoContent();
-        }
-
-        // DELETE: api/orders/{id}
-        [HttpDelete("DeleteOrder/{id}")]
-        public IActionResult DeleteOrder(Guid id)
-        {
-            var order = _context.Orders.Find(id);
-            if (order == null)
-            {
-                return NotFound($"Order with ID {id} not found.");
-            }
-
-            _context.Orders.Remove(order);
-            _context.SaveChanges();
-
-            return NoContent();
-        }
-
-        // GET: api/orders/customer/{customerId}
-        [HttpGet("customer/{customerId}")]
-        public IActionResult GetOrdersByCustomer(Guid customerId)
-        {
-            var orders = _context.Orders
-                .Where(o => o.CustomerId == customerId)
-                .Select(o => new OrderDto
-                {
-                    Id = o.Id,
-                    OrderDate = o.OrderDate,
-                    Status = o.Status,
-                    Type = o.Type,
-                    Price = o.Price,
-                    PaymentSystem = o.PaymentSystem,
-                    Note = o.Note,
-                    CustomerId = o.CustomerId,
-                    OrderItems = o.OrderItems.Select(oi => new OrderItemDto
-                    {
-                        Id = oi.Id,
-                        Quantity = oi.Quantity,
-                        Note = oi.Note,
-                        SpicyLevel = oi.SpicyLevel,
-                        Price = oi.Price,
-                        Customizations = oi.Customizations.Select(c => new OrderItemCustomizationDto
-                        {
-                            Id = c.Id,
-                            Name = c.Name,
-                            ExtraPrice = c.ExtraPrice
-                        }).ToList()
-                    }).ToList()
-                })
-                .ToList();
-
-            return Ok(orders);
         }
     }
 }

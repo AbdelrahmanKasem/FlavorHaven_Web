@@ -122,35 +122,11 @@ public class TableController : ControllerBase
             Status = BookingStatus.Pending,
             CustomerId = bookingDto.CustomerId,
             TableId = bookingDto.TableId,
-            BranchId = bookingDto.BranchId
         };
 
         _context.Bookings.Add(booking);
         await _context.SaveChangesAsync();
 
         return Ok(new { Message = "Booking created successfully", BookingId = booking.Id });
-    }
-
-    // ✅ Get Available Time Slots
-    [HttpGet("AvailableTimes/{branchId}/{date}")]
-    public IActionResult GetAvailableTimes(Guid branchId, DateTime date)
-    {
-        var bookedTimes = _context.Bookings
-            .Where(b => b.BranchId == branchId && b.Date == date)
-            .Select(b => b.Time)
-            .ToList();
-
-        var allTimes = Enumerable.Range(10, 12).Select(h => new TimeSpan(h, 0, 0)).ToList();
-        var availableTimes = allTimes.Except(bookedTimes).ToList();
-
-        return Ok(availableTimes);
-    }
-
-    // ✅ Get Branches
-    [HttpGet("Branches")]
-    public async Task<IActionResult> GetBranches()
-    {
-        var branches = await _context.Branches.Select(b => new { b.Id, b.Name }).ToListAsync();
-        return Ok(branches);
     }
 }

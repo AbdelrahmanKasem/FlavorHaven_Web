@@ -11,6 +11,5 @@
         public DateTime Date { get; set; }
         public TimeSpan Time { get; set; }
         public int GuestCount { get; set; }
-        public Guid BranchId { get; set; }
     }
 }

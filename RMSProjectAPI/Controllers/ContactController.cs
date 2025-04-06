@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using RMSProjectAPI.Database;
 using RMSProjectAPI.Database.Entity;
 using System.Threading.Tasks;
@@ -7,6 +8,7 @@ namespace RMSProjectAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [AllowAnonymous]
     public class ContactController : ControllerBase
     {
         private readonly AppDbContext _context;

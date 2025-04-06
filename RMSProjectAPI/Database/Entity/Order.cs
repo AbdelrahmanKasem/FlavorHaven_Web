@@ -11,6 +11,9 @@ namespace RMSProjectAPI.Database.Entity
         public OrderStatus Status { get; set; } // Enum
         public OrderType Type { get; set; } // Enum
         public decimal Price { get; set; }
+
+        
+
         [Required]
         [MaxLength(50)]
         public string PaymentSystem { get; set; }

@@ -32,9 +32,5 @@ namespace RMSProjectAPI.Database.Entity
         public Guid TableId { get; set; }
         [ForeignKey(nameof(TableId))]
         public virtual Table? Table { get; set; }
-
-        public Guid BranchId { get; set; }
-        [ForeignKey(nameof(BranchId))]
-        public virtual Branch? Branch { get; set; }
     }
 }
