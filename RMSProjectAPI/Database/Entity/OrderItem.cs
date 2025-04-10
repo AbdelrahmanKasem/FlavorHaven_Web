@@ -7,6 +7,7 @@ namespace RMSProjectAPI.Database.Entity
 {
     public class OrderItem
     {
+        [Key]
         public Guid Id { get; set; }
         [Required]
         [Range(1, int.MaxValue)]
@@ -22,7 +23,6 @@ namespace RMSProjectAPI.Database.Entity
         public Guid OrderId { get; set; }
         [ForeignKey(nameof(OrderId))]
         public virtual Order Order { get; set; }
-        public virtual List<OrderItemCustomization> Customizations { get; set; } = new();
     }
 
     public enum SpicyLevel { None, Mild, Medium, Hot, ExtraHot }

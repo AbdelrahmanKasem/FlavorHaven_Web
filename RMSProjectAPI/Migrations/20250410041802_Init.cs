@@ -26,6 +26,41 @@ namespace RMSProjectAPI.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "AspNetUsers",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    FirstName = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    LastName = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    BirthDate = table.Column<DateOnly>(type: "date", nullable: true),
+                    Gender = table.Column<string>(type: "nvarchar(1)", nullable: true),
+                    Country = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    City = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Street = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Role = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CreatedAt = table.Column<DateOnly>(type: "date", nullable: false),
+                    Status = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    UserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
+                    NormalizedUserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
+                    Email = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
+                    NormalizedEmail = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
+                    EmailConfirmed = table.Column<bool>(type: "bit", nullable: false),
+                    PasswordHash = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    SecurityStamp = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    ConcurrencyStamp = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    PhoneNumber = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    PhoneNumberConfirmed = table.Column<bool>(type: "bit", nullable: false),
+                    TwoFactorEnabled = table.Column<bool>(type: "bit", nullable: false),
+                    LockoutEnd = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true),
+                    LockoutEnabled = table.Column<bool>(type: "bit", nullable: false),
+                    AccessFailedCount = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_AspNetUsers", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Carts",
                 columns: table => new
                 {
@@ -50,6 +85,35 @@ namespace RMSProjectAPI.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Chats", x => x.ChatID);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ContactForms",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    FirstName = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    LastName = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Email = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    PhoneNumber = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Message = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    IsPrivacyPolicyAccepted = table.Column<bool>(type: "bit", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ContactForms", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Menus",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Offers = table.Column<decimal>(type: "decimal(18,2)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Menus", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -89,28 +153,6 @@ namespace RMSProjectAPI.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Messages",
-                columns: table => new
-                {
-                    MessageID = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    ChatID = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    SenderID = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    MessageText = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    SentAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    IsRead = table.Column<bool>(type: "bit", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Messages", x => x.MessageID);
-                    table.ForeignKey(
-                        name: "FK_Messages_Chats_ChatID",
-                        column: x => x.ChatID,
-                        principalTable: "Chats",
-                        principalColumn: "ChatID",
-                        onDelete: ReferentialAction.Restrict);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "AspNetUserClaims",
                 columns: table => new
                 {
@@ -123,6 +165,12 @@ namespace RMSProjectAPI.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_AspNetUserClaims", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_AspNetUserClaims_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -137,6 +185,12 @@ namespace RMSProjectAPI.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_AspNetUserLogins", x => new { x.LoginProvider, x.ProviderKey });
+                    table.ForeignKey(
+                        name: "FK_AspNetUserLogins_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -155,42 +209,12 @@ namespace RMSProjectAPI.Migrations
                         principalTable: "AspNetRoles",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "AspNetUsers",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    FirstName = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    LastName = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    BirthDate = table.Column<DateOnly>(type: "date", nullable: true),
-                    Gender = table.Column<string>(type: "nvarchar(1)", nullable: true),
-                    Country = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    City = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Street = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Role = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    CreatedAt = table.Column<DateOnly>(type: "date", nullable: false),
-                    Status = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    BranchId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
-                    UserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
-                    NormalizedUserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
-                    Email = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
-                    NormalizedEmail = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
-                    EmailConfirmed = table.Column<bool>(type: "bit", nullable: false),
-                    PasswordHash = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    SecurityStamp = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    ConcurrencyStamp = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    PhoneNumber = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    PhoneNumberConfirmed = table.Column<bool>(type: "bit", nullable: false),
-                    TwoFactorEnabled = table.Column<bool>(type: "bit", nullable: false),
-                    LockoutEnd = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true),
-                    LockoutEnabled = table.Column<bool>(type: "bit", nullable: false),
-                    AccessFailedCount = table.Column<int>(type: "int", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_AspNetUsers", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_AspNetUserRoles_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -209,106 +233,6 @@ namespace RMSProjectAPI.Migrations
                         name: "FK_AspNetUserTokens_AspNetUsers_UserId",
                         column: x => x.UserId,
                         principalTable: "AspNetUsers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Bookings",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    Date = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    Status = table.Column<int>(type: "int", nullable: false),
-                    BookingTime = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    CustomerId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    TableId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Bookings", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Bookings_AspNetUsers_CustomerId",
-                        column: x => x.CustomerId,
-                        principalTable: "AspNetUsers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_Bookings_Tables_TableId",
-                        column: x => x.TableId,
-                        principalTable: "Tables",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Branches",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    Name = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Country = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    City = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Street = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    GoogleMapsLocation = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    TotalRating = table.Column<int>(type: "int", nullable: false),
-                    RatingCount = table.Column<int>(type: "int", nullable: false),
-                    ManagerId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Branches", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Branches_AspNetUsers_ManagerId",
-                        column: x => x.ManagerId,
-                        principalTable: "AspNetUsers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "EmployeeAttendances",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    CheckInDateTime = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    CheckOutDateTime = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    EmployeeId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_EmployeeAttendances", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_EmployeeAttendances_AspNetUsers_EmployeeId",
-                        column: x => x.EmployeeId,
-                        principalTable: "AspNetUsers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "GroupOrders",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    IsSubmitted = table.Column<bool>(type: "bit", nullable: false),
-                    AdminUserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    TableId = table.Column<Guid>(type: "uniqueidentifier", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_GroupOrders", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_GroupOrders_AspNetUsers_AdminUserId",
-                        column: x => x.AdminUserId,
-                        principalTable: "AspNetUsers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_GroupOrders_Tables_TableId",
-                        column: x => x.TableId,
-                        principalTable: "Tables",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
@@ -341,6 +265,7 @@ namespace RMSProjectAPI.Migrations
                     Status = table.Column<int>(type: "int", nullable: false),
                     Type = table.Column<int>(type: "int", nullable: false),
                     Price = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    EstimatedPreparationTime = table.Column<TimeSpan>(type: "time", nullable: false),
                     PaymentSystem = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     Note = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     CustomerId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
@@ -399,45 +324,94 @@ namespace RMSProjectAPI.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Menus",
+                name: "Messages",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    Offers = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
-                    BranchId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                    MessageID = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    ChatID = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    SenderID = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    MessageText = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    SentAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    IsRead = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Menus", x => x.Id);
+                    table.PrimaryKey("PK_Messages", x => x.MessageID);
                     table.ForeignKey(
-                        name: "FK_Menus_Branches_BranchId",
-                        column: x => x.BranchId,
-                        principalTable: "Branches",
+                        name: "FK_Messages_Chats_ChatID",
+                        column: x => x.ChatID,
+                        principalTable: "Chats",
+                        principalColumn: "ChatID",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Categories",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    MenuId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Categories", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Categories_Menus_MenuId",
+                        column: x => x.MenuId,
+                        principalTable: "Menus",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
-                name: "GroupOrderMembers",
+                name: "Bookings",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    GroupOrderId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    UserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                    Date = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Time = table.Column<TimeSpan>(type: "time", nullable: false),
+                    Status = table.Column<int>(type: "int", nullable: false),
+                    GuestCount = table.Column<int>(type: "int", nullable: false),
+                    CustomerId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    TableId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_GroupOrderMembers", x => x.Id);
+                    table.PrimaryKey("PK_Bookings", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_GroupOrderMembers_AspNetUsers_UserId",
-                        column: x => x.UserId,
+                        name: "FK_Bookings_AspNetUsers_CustomerId",
+                        column: x => x.CustomerId,
                         principalTable: "AspNetUsers",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_GroupOrderMembers_GroupOrders_GroupOrderId",
-                        column: x => x.GroupOrderId,
-                        principalTable: "GroupOrders",
+                        name: "FK_Bookings_Tables_TableId",
+                        column: x => x.TableId,
+                        principalTable: "Tables",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "OrderItems",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Quantity = table.Column<int>(type: "int", nullable: false),
+                    Note = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    SpicyLevel = table.Column<int>(type: "int", nullable: false),
+                    Price = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    MenuItemId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    OrderId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_OrderItems", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_OrderItems_Orders_OrderId",
+                        column: x => x.OrderId,
+                        principalTable: "Orders",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
@@ -485,54 +459,6 @@ namespace RMSProjectAPI.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Categories",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    Name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    MenuId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Categories", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Categories_Menus_MenuId",
-                        column: x => x.MenuId,
-                        principalTable: "Menus",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "OrderItems",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    Quantity = table.Column<int>(type: "int", nullable: false),
-                    Note = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    SpicyLevel = table.Column<int>(type: "int", nullable: false),
-                    Price = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    OrderId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    GroupOrderMemberId = table.Column<Guid>(type: "uniqueidentifier", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_OrderItems", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_OrderItems_GroupOrderMembers_GroupOrderMemberId",
-                        column: x => x.GroupOrderMemberId,
-                        principalTable: "GroupOrderMembers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_OrderItems_Orders_OrderId",
-                        column: x => x.OrderId,
-                        principalTable: "Orders",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "MenuItems",
                 columns: table => new
                 {
@@ -541,8 +467,7 @@ namespace RMSProjectAPI.Migrations
                     Description = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     ImagePath = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Price = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    Duration = table.Column<int>(type: "int", nullable: false),
-                    Offers = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
+                    Duration = table.Column<TimeSpan>(type: "time", nullable: false),
                     TotalRating = table.Column<int>(type: "int", nullable: false),
                     RatingCount = table.Column<int>(type: "int", nullable: false),
                     CategoryId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
@@ -559,27 +484,7 @@ namespace RMSProjectAPI.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "OrderItemCustomizations",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    OrderItemId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    Name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    ExtraPrice = table.Column<decimal>(type: "decimal(18,2)", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_OrderItemCustomizations", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_OrderItemCustomizations_OrderItems_OrderItemId",
-                        column: x => x.OrderItemId,
-                        principalTable: "OrderItems",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "CartItem",
+                name: "CartItems",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
@@ -590,15 +495,15 @@ namespace RMSProjectAPI.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_CartItem", x => x.Id);
+                    table.PrimaryKey("PK_CartItems", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_CartItem_Carts_CartId",
+                        name: "FK_CartItems_Carts_CartId",
                         column: x => x.CartId,
                         principalTable: "Carts",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_CartItem_MenuItems_MenuItemId",
+                        name: "FK_CartItems_MenuItems_MenuItemId",
                         column: x => x.MenuItemId,
                         principalTable: "MenuItems",
                         principalColumn: "Id",
@@ -606,22 +511,20 @@ namespace RMSProjectAPI.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Components",
+                name: "Extras",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    ExpirationDate = table.Column<DateOnly>(type: "date", nullable: false),
-                    Quantity = table.Column<int>(type: "int", nullable: false),
-                    Unit = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Price = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    ImagePath = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     MenuItemId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Components", x => x.Id);
+                    table.PrimaryKey("PK_Extras", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Components_MenuItems_MenuItemId",
+                        name: "FK_Extras_MenuItems_MenuItemId",
                         column: x => x.MenuItemId,
                         principalTable: "MenuItems",
                         principalColumn: "Id",
@@ -647,6 +550,51 @@ namespace RMSProjectAPI.Migrations
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_FavoriteMeals_MenuItems_MenuItemId",
+                        column: x => x.MenuItemId,
+                        principalTable: "MenuItems",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "MenuItemSizes",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    MenuItemId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Grams = table.Column<int>(type: "int", nullable: false),
+                    Price = table.Column<decimal>(type: "decimal(18,2)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_MenuItemSizes", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_MenuItemSizes_MenuItems_MenuItemId",
+                        column: x => x.MenuItemId,
+                        principalTable: "MenuItems",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Offers",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Title = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Price = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    ImagePath = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    StartDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    EndDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    MenuItemId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Offers", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Offers_MenuItems_MenuItemId",
                         column: x => x.MenuItemId,
                         principalTable: "MenuItems",
                         principalColumn: "Id",
@@ -686,11 +634,6 @@ namespace RMSProjectAPI.Migrations
                 column: "NormalizedEmail");
 
             migrationBuilder.CreateIndex(
-                name: "IX_AspNetUsers_BranchId",
-                table: "AspNetUsers",
-                column: "BranchId");
-
-            migrationBuilder.CreateIndex(
                 name: "UserNameIndex",
                 table: "AspNetUsers",
                 column: "NormalizedUserName",
@@ -708,18 +651,13 @@ namespace RMSProjectAPI.Migrations
                 column: "TableId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Branches_ManagerId",
-                table: "Branches",
-                column: "ManagerId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_CartItem_CartId",
-                table: "CartItem",
+                name: "IX_CartItems_CartId",
+                table: "CartItems",
                 column: "CartId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_CartItem_MenuItemId",
-                table: "CartItem",
+                name: "IX_CartItems_MenuItemId",
+                table: "CartItems",
                 column: "MenuItemId");
 
             migrationBuilder.CreateIndex(
@@ -728,14 +666,9 @@ namespace RMSProjectAPI.Migrations
                 column: "MenuId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Components_MenuItemId",
-                table: "Components",
+                name: "IX_Extras_MenuItemId",
+                table: "Extras",
                 column: "MenuItemId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_EmployeeAttendances_EmployeeId",
-                table: "EmployeeAttendances",
-                column: "EmployeeId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_FavoriteMeals_MenuItemId",
@@ -748,26 +681,6 @@ namespace RMSProjectAPI.Migrations
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_GroupOrderMembers_GroupOrderId",
-                table: "GroupOrderMembers",
-                column: "GroupOrderId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_GroupOrderMembers_UserId",
-                table: "GroupOrderMembers",
-                column: "UserId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_GroupOrders_AdminUserId",
-                table: "GroupOrders",
-                column: "AdminUserId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_GroupOrders_TableId",
-                table: "GroupOrders",
-                column: "TableId");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_Locations_UserId",
                 table: "Locations",
                 column: "UserId");
@@ -778,9 +691,9 @@ namespace RMSProjectAPI.Migrations
                 column: "CategoryId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Menus_BranchId",
-                table: "Menus",
-                column: "BranchId");
+                name: "IX_MenuItemSizes_MenuItemId",
+                table: "MenuItemSizes",
+                column: "MenuItemId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Messages_ChatID",
@@ -788,14 +701,9 @@ namespace RMSProjectAPI.Migrations
                 column: "ChatID");
 
             migrationBuilder.CreateIndex(
-                name: "IX_OrderItemCustomizations_OrderItemId",
-                table: "OrderItemCustomizations",
-                column: "OrderItemId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_OrderItems_GroupOrderMemberId",
-                table: "OrderItems",
-                column: "GroupOrderMemberId");
+                name: "IX_Offers_MenuItemId",
+                table: "Offers",
+                column: "MenuItemId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_OrderItems_OrderId",
@@ -826,47 +734,11 @@ namespace RMSProjectAPI.Migrations
                 name: "IX_Suppliers_SupervisorId",
                 table: "Suppliers",
                 column: "SupervisorId");
-
-            migrationBuilder.AddForeignKey(
-                name: "FK_AspNetUserClaims_AspNetUsers_UserId",
-                table: "AspNetUserClaims",
-                column: "UserId",
-                principalTable: "AspNetUsers",
-                principalColumn: "Id",
-                onDelete: ReferentialAction.Restrict);
-
-            migrationBuilder.AddForeignKey(
-                name: "FK_AspNetUserLogins_AspNetUsers_UserId",
-                table: "AspNetUserLogins",
-                column: "UserId",
-                principalTable: "AspNetUsers",
-                principalColumn: "Id",
-                onDelete: ReferentialAction.Restrict);
-
-            migrationBuilder.AddForeignKey(
-                name: "FK_AspNetUserRoles_AspNetUsers_UserId",
-                table: "AspNetUserRoles",
-                column: "UserId",
-                principalTable: "AspNetUsers",
-                principalColumn: "Id",
-                onDelete: ReferentialAction.Restrict);
-
-            migrationBuilder.AddForeignKey(
-                name: "FK_AspNetUsers_Branches_BranchId",
-                table: "AspNetUsers",
-                column: "BranchId",
-                principalTable: "Branches",
-                principalColumn: "Id",
-                onDelete: ReferentialAction.Restrict);
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropForeignKey(
-                name: "FK_Branches_AspNetUsers_ManagerId",
-                table: "Branches");
-
             migrationBuilder.DropTable(
                 name: "AspNetRoleClaims");
 
@@ -886,13 +758,13 @@ namespace RMSProjectAPI.Migrations
                 name: "Bookings");
 
             migrationBuilder.DropTable(
-                name: "CartItem");
+                name: "CartItems");
 
             migrationBuilder.DropTable(
-                name: "Components");
+                name: "ContactForms");
 
             migrationBuilder.DropTable(
-                name: "EmployeeAttendances");
+                name: "Extras");
 
             migrationBuilder.DropTable(
                 name: "FavoriteMeals");
@@ -901,10 +773,16 @@ namespace RMSProjectAPI.Migrations
                 name: "Locations");
 
             migrationBuilder.DropTable(
+                name: "MenuItemSizes");
+
+            migrationBuilder.DropTable(
                 name: "Messages");
 
             migrationBuilder.DropTable(
-                name: "OrderItemCustomizations");
+                name: "Offers");
+
+            migrationBuilder.DropTable(
+                name: "OrderItems");
 
             migrationBuilder.DropTable(
                 name: "OrderLogs");
@@ -922,40 +800,28 @@ namespace RMSProjectAPI.Migrations
                 name: "AspNetRoles");
 
             migrationBuilder.DropTable(
-                name: "Carts");
+                name: "Tables");
 
             migrationBuilder.DropTable(
-                name: "MenuItems");
+                name: "Carts");
 
             migrationBuilder.DropTable(
                 name: "Chats");
 
             migrationBuilder.DropTable(
-                name: "OrderItems");
-
-            migrationBuilder.DropTable(
-                name: "Categories");
-
-            migrationBuilder.DropTable(
-                name: "GroupOrderMembers");
+                name: "MenuItems");
 
             migrationBuilder.DropTable(
                 name: "Orders");
 
             migrationBuilder.DropTable(
-                name: "Menus");
-
-            migrationBuilder.DropTable(
-                name: "GroupOrders");
-
-            migrationBuilder.DropTable(
-                name: "Tables");
+                name: "Categories");
 
             migrationBuilder.DropTable(
                 name: "AspNetUsers");
 
             migrationBuilder.DropTable(
-                name: "Branches");
+                name: "Menus");
         }
     }
 }

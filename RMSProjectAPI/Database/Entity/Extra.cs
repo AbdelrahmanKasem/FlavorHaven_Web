@@ -2,14 +2,12 @@
 
 namespace RMSProjectAPI.Database.Entity
 {
-    public class Component
+    public class Extra
     {
         public Guid Id { get; set; }
         public string Name { get; set; }
-        public DateOnly ExpirationDate { get; set; }
-        public int Quantity { get; set; }
-        public string Unit { get; set; }
         public decimal Price { get; set; }
+        public string ImagePath { get; set; }
 
         public Guid MenuItemId { get; set; }
         [ForeignKey(nameof(MenuItemId))]

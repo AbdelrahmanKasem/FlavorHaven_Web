@@ -1,128 +1,122 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using RMSProjectAPI.Database;
-using RMSProjectAPI.Database.Entity;
-using RMSProjectAPI.Model;
+﻿//using System;
+//using System.Collections.Generic;
+//using System.Linq;
+//using System.Threading.Tasks;
+//using Microsoft.AspNetCore.Mvc;
+//using Microsoft.EntityFrameworkCore;
+//using RMSProjectAPI.Database;
+//using RMSProjectAPI.Database.Entity;
+//using RMSProjectAPI.Model;
 
-namespace RMSProjectAPI.Controllers
-{
-    [Route("api/[controller]")]
-    [ApiController]
-    public class CartController : ControllerBase
-    {
-        private readonly AppDbContext _context;
+//namespace RMSProjectAPI.Controllers
+//{
+//    [Route("api/[controller]")]
+//    [ApiController]
+//    public class CartController : ControllerBase
+//    {
+//        private readonly AppDbContext _context;
 
-        public CartController(AppDbContext context)
-        {
-            _context = context;
-        }
+//        public CartController(AppDbContext context)
+//        {
+//            _context = context;
+//        }
 
-        [HttpGet("GetCart/{userId}")]
-        public async Task<ActionResult<CartDto>> GetCart(Guid userId)
-        {
-            var cart = await _context.Carts
-                .Include(c => c.Items)
-                    .ThenInclude(i => i.MenuItem) // Ensure MenuItem is loaded
-                .FirstOrDefaultAsync(c => c.UserId == userId && !c.IsCheckedOut);
+//        [HttpPost("AddItem")]
+//        public async Task<IActionResult> AddItemToCart(Guid userId, Guid menuItemId, Guid menuItemSizeId, int quantity)
+//        {
+//            // Get or create the user's cart
+//            var cart = await _context.Carts
+//                .Include(c => c.Items)
+//                .FirstOrDefaultAsync(c => c.UserId == userId && !c.IsCheckedOut);
 
-            if (cart == null)
-                return NotFound("Cart not found.");
+//            if (cart == null)
+//            {
+//                cart = new Cart
+//                {
+//                    Id = Guid.NewGuid(),
+//                    UserId = userId,
+//                    IsCheckedOut = false,
+//                    TotalPrice = 0,
+//                    Items = new List<CartItem>()
+//                };
+//                _context.Carts.Add(cart);
+//            }
 
-            return new CartDto
-            {
-                Id = cart.Id,
-                UserId = cart.UserId,
-                IsCheckedOut = cart.IsCheckedOut,
-                TotalPrice = cart.TotalPrice,
-                Items = cart.Items
-                    .Where(i => i.MenuItem != null) // Avoid null references
-                    .Select(i => new MenuItemDto
-                    {
-                        Id = i.MenuItemId,
-                        Name = i.MenuItem?.Name ?? "Unknown Item",
-                        Price = i.MenuItem?.Price ?? 0,
-                        Quantity = i.Quantity
-                    }).ToList()
-            };
-        }
+//            // Validate the selected MenuItem and Size
+//            var menuItem = await _context.MenuItems
+//                .Include(m => m.Sizes)
+//                .FirstOrDefaultAsync(m => m.Id == menuItemId);
 
-        [HttpPost("AddToCart")]
-        public async Task<ActionResult<CartDto>> AddToCart(Guid userId, Guid menuItemId, int quantity)
-        {
-            var cart = await _context.Carts.Include(c => c.Items)
-                .FirstOrDefaultAsync(c => c.UserId == userId && !c.IsCheckedOut);
+//            if (menuItem == null)
+//                return NotFound("Menu item not found.");
 
-            if (cart == null)
-            {
-                cart = new Cart { Id = Guid.NewGuid(), UserId = userId };
-                _context.Carts.Add(cart);
-            }
+//            var selectedSize = menuItem.Sizes.FirstOrDefault(s => s.Id == menuItemSizeId);
+//            if (selectedSize == null)
+//                return NotFound("Selected size not found.");
 
-            var menuItem = await _context.MenuItems.FindAsync(menuItemId);
-            if (menuItem == null)
-                return NotFound("Menu item not found.");
+//            decimal price = selectedSize.Price;
 
-            var cartItem = cart.Items.FirstOrDefault(i => i.MenuItemId == menuItemId);
-            if (cartItem != null)
-                cartItem.Quantity += quantity;
-            else
-                cart.Items.Add(new CartItem { Id = Guid.NewGuid(), CartId = cart.Id, MenuItemId = menuItemId, Quantity = quantity });
+//            // Create the cart item
+//            var cartItem = new CartItem
+//            {
+//                Id = Guid.NewGuid(),
+//                CartId = cart.Id,
+//                MenuItemId = menuItemId,
+//                MenuItemSizeId = menuItemSizeId,
+//                MenuItemName = menuItem.Name,
+//                MenuItemDescription = menuItem.Description,
+//                MenuItemImage = menuItem.ImagePath,
+//                PriceAtTimeOfOrder = price,
+//                Quantity = quantity
+//            };
 
-            await _context.SaveChangesAsync();
-            return Ok("Item added to cart.");
-        }
+//            cart.Items.Add(cartItem);
+//            cart.TotalPrice = cart.Items.Sum(i => i.PriceAtTimeOfOrder * i.Quantity);
 
-        [HttpPut("Checkout/{userId}")]
-        public async Task<ActionResult> Checkout(Guid userId)
-        {
-            var cart = await _context.Carts.Include(c => c.Items)
-                .FirstOrDefaultAsync(c => c.UserId == userId && !c.IsCheckedOut);
+//            await _context.SaveChangesAsync();
 
-            if (cart == null || !cart.Items.Any())
-                return BadRequest("Cart is empty or does not exist.");
+//            return Ok(new
+//            {
+//                Message = "Item added to cart.",
+//                CartId = cart.Id,
+//                Total = cart.TotalPrice
+//            });
+//        }
 
-            cart.IsCheckedOut = true;
-            await _context.SaveChangesAsync();
-            return Ok("Checkout successful.");
-        }
+//        [HttpDelete("DeleteItem")]
+//        public async Task<IActionResult> DeleteItemFromCart(Guid userId, Guid cartItemId)
+//        {
+//            // Find the user's active cart
+//            var cart = await _context.Carts
+//                .Include(c => c.Items)
+//                .FirstOrDefaultAsync(c => c.UserId == userId && !c.IsCheckedOut);
 
-        [HttpDelete("ClearCart{userId}")]
-        public async Task<ActionResult> ClearCart(Guid userId)
-        {
-            var cart = await _context.Carts.Include(c => c.Items)
-                .FirstOrDefaultAsync(c => c.UserId == userId && !c.IsCheckedOut);
+//            if (cart == null)
+//            {
+//                return NotFound("Cart not found for the user.");
+//            }
 
-            if (cart == null)
-                return NotFound("Cart not found.");
+//            // Find the item to delete
+//            var item = cart.Items.FirstOrDefault(i => i.Id == cartItemId);
+//            if (item == null)
+//            {
+//                return NotFound("Item not found in the cart.");
+//            }
 
-            // Clear the items from the cart
-            cart.Items.Clear();
+//            // Remove item and update total price
+//            cart.Items.Remove(item);
+//            _context.CartItems.Remove(item); // Explicit removal from DbContext
+//            cart.TotalPrice = cart.Items.Sum(i => i.PriceAtTimeOfOrder * i.Quantity);
 
-            await _context.SaveChangesAsync();
-            return Ok("Cart cleared successfully.");
-        }
+//            await _context.SaveChangesAsync();
 
-        [HttpDelete("DeleteCartItem{userId}/item/{menuItemId}")]
-        public async Task<ActionResult> RemoveCartItem(Guid userId, Guid menuItemId)
-        {
-            var cart = await _context.Carts.Include(c => c.Items)
-                .FirstOrDefaultAsync(c => c.UserId == userId && !c.IsCheckedOut);
+//            return Ok(new
+//            {
+//                Message = "Item removed from cart.",
+//                CartId = cart.Id,
+//                Total = cart.TotalPrice
+//            });
+//        }
 
-            if (cart == null)
-                return NotFound("Cart not found.");
-
-            var cartItem = cart.Items.FirstOrDefault(i => i.MenuItemId == menuItemId);
-            if (cartItem == null)
-                return NotFound("Item not found in cart.");
-
-            cart.Items.Remove(cartItem);
-            await _context.SaveChangesAsync();
-
-            return Ok("Item removed from cart.");
-        }
-    }
-}
+//    }
+//}

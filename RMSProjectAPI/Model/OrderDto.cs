@@ -13,6 +13,7 @@ namespace RMSProjectAPI.DTOs
         public string PaymentSystem { get; set; }
         public string? Note { get; set; }
         public Guid CustomerId { get; set; }
+        public TimeSpan EstimatedPreparationTime { get; set; } // Add this
         public List<OrderItemDto> OrderItems { get; set; } = new List<OrderItemDto>();
     }
 
@@ -44,7 +45,6 @@ namespace RMSProjectAPI.DTOs
 
         public Guid MenuItemId { get; set; }
         public string MenuItemName { get; set; }
-        public List<OrderItemCustomizationDto> Customizations { get; set; } = new List<OrderItemCustomizationDto>();
     }
 
     public class CreateOrderItemDto
@@ -53,23 +53,5 @@ namespace RMSProjectAPI.DTOs
         public string? Note { get; set; }
         public string SpicyLevel { get; set; }
         public Guid MenuItemId { get; set; }
-        public List<CreateOrderItemCustomizationDto> Customizations { get; set; } = new List<CreateOrderItemCustomizationDto>();
-    }
-}
-
-// DTOs/OrderItemCustomizationDto.cs
-namespace RMSProjectAPI.DTOs
-{
-    public class OrderItemCustomizationDto
-    {
-        public Guid Id { get; set; }
-        public string Name { get; set; }
-        public decimal ExtraPrice { get; set; }
-    }
-
-    public class CreateOrderItemCustomizationDto
-    {
-        public string Name { get; set; }
-        public decimal ExtraPrice { get; set; }
     }
 }

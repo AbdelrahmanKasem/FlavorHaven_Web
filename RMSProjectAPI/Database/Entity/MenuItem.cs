@@ -12,8 +12,7 @@ namespace RMSProjectAPI.Database.Entity
         public string ImagePath { get; set; }
         [Required]
         public decimal Price { get; set; }
-        public int Duration { get; set; }
-        public decimal? Offers { get; set; }
+        public TimeSpan Duration { get; set; }
 
         // Rating system
         public int TotalRating { get; set; } = 0; // Sum of all ratings
@@ -27,6 +26,7 @@ namespace RMSProjectAPI.Database.Entity
         [ForeignKey(nameof(CategoryId))]
         public virtual Category Category { get; set; }
 
-        public virtual List<Component> Components { get; set; } // Link to components
+        public virtual List<Extra> Extras { get; set; }
+        public List<MenuItemSize> Sizes { get; set; }
     }
 }

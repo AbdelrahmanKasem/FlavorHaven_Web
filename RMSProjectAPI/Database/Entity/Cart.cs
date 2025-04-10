@@ -13,6 +13,7 @@ namespace RMSProjectAPI.Database.Entity
         public virtual List<CartItem> Items { get; set; } = new List<CartItem>();
 
         [NotMapped]
-        public decimal TotalPrice => Items.Sum(i => i.TotalPrice);
+        public decimal TotalPrice { get; set; }
+        //public decimal TotalPrice => Items.Sum(i => i.TotalPrice);
     }
 }

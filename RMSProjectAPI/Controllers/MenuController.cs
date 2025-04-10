@@ -21,6 +21,36 @@ namespace RMSProjectAPI.Controllers
             _context = context;
         }
 
+        // ✅ Get all Categories with their Menu Items by Menu ID
+        [HttpGet("GetAllMenuItems/{menuId}")]
+        public async Task<IActionResult> GetCategoriesWithMenuItems(Guid menuId)
+        {
+            var categories = await _context.Categories
+                .Where(c => c.MenuId == menuId)
+                .Select(c => new
+                {
+                    c.Id,
+                    c.Name,
+                    Items = _context.MenuItems
+                        .Where(mi => mi.CategoryId == c.Id)
+                        .Select(mi => new
+                        {
+                            mi.Id,
+                            mi.Name,
+                            mi.Description,
+                            mi.ImagePath,
+                            mi.Price
+                        })
+                        .ToList()
+                })
+                .ToListAsync();
+
+            if (categories == null || categories.Count == 0)
+                return NotFound("No categories or menu items found for this menu.");
+
+            return Ok(categories);
+        }
+
         // ✅ Create Menu
         [HttpPost("CreateMenu")]
         public async Task<IActionResult> CreateMenu([FromBody] MenuDto menuDto)
@@ -133,7 +163,7 @@ namespace RMSProjectAPI.Controllers
 
         // ✅ Update Category
         [HttpPut("UpdateCategory/{id}")]
-        public async Task<IActionResult> UpdateCategory(Guid id, [FromBody] CategoryDto categoryDto)
+        public async Task<IActionResult> UpdateCategory(Guid id, [FromBody] UpdateCategoryDto categoryDto)
         {
             var category = await _context.Categories.FindAsync(id);
             if (category == null)
@@ -173,8 +203,8 @@ namespace RMSProjectAPI.Controllers
                 Description = menuItemDto.Description,
                 ImagePath = menuItemDto.ImagePath,
                 Price = menuItemDto.Price,
-                Duration = menuItemDto.Duration,
-                Offers = menuItemDto.Offers,
+                //Duration = menuItemDto.Duration,
+                //Offers = menuItemDto.Offers,
                 CategoryId = menuItemDto.CategoryId
             };
 
@@ -192,11 +222,28 @@ namespace RMSProjectAPI.Controllers
             return Ok(menuItems);
         }
 
-        // ✅ Get MenuItems by Category ID
         [HttpGet("GetMenuItemsByCategory/{categoryId}")]
-        public async Task<IActionResult> GetMenuItemsByCategoryId(Guid categoryId)
+        public async Task<IActionResult> GetMenuItemsByCategoryId(Guid categoryId, [FromQuery] Guid? userId = null)
         {
-            var menuItems = await _context.MenuItems.Where(m => m.CategoryId == categoryId).ToListAsync();
+            var menuItemsQuery = _context.MenuItems
+                .Where(m => m.CategoryId == categoryId)
+                .Select(m => new
+                {
+                    m.Id,
+                    m.Name,
+                    m.Description,
+                    m.ImagePath,
+                    m.Price,
+                    m.Duration,
+                    m.TotalRating,
+                    m.RatingCount,
+                    m.CategoryId,
+                    AverageRating = m.RatingCount > 0 ? (double)m.TotalRating / m.RatingCount : 0,
+                    IsFavorite = userId != null && _context.FavoriteMeals.Any(f => f.MenuItemId == m.Id && f.UserId == userId)
+                });
+
+            var menuItems = await menuItemsQuery.ToListAsync();
+
             return Ok(menuItems);
         }
 
@@ -223,7 +270,7 @@ namespace RMSProjectAPI.Controllers
 
         // ✅ Update MenuItem
         [HttpPut("UpdateMenuItem/{id}")]
-        public async Task<IActionResult> UpdateMenuItem(Guid id, [FromBody] MenuItemDto menuItemDto)
+        public async Task<IActionResult> UpdateMenuItem(Guid id, [FromBody] UpdateMenuItemDto menuItemDto)
         {
             var menuItem = await _context.MenuItems.FindAsync(id);
             if (menuItem == null)
@@ -234,8 +281,6 @@ namespace RMSProjectAPI.Controllers
             menuItem.ImagePath = menuItemDto.ImagePath;
             menuItem.Price = menuItemDto.Price;
             menuItem.Duration = menuItemDto.Duration;
-            menuItem.Offers = menuItemDto.Offers;
-            menuItem.CategoryId = menuItemDto.CategoryId;
 
             await _context.SaveChangesAsync();
             return NoContent();
@@ -254,75 +299,215 @@ namespace RMSProjectAPI.Controllers
             return NoContent();
         }
 
-        // ✅ Search in menu items
-        [HttpGet("SearchMenuItems")]
-        public async Task<IActionResult> SearchMenuItems(
-            [FromQuery] string? name,
-            [FromQuery] Guid? categoryId,
-            [FromQuery] decimal? minPrice,
-            [FromQuery] decimal? maxPrice,
-            [FromQuery] bool? hasOffer)
+        // ========================== Extra ================================
+        // Create an Extra
+        [HttpPost("CreateExtra")]
+        public async Task<ActionResult<ExtraDto>> CreateExtra(ExtraDto extraDto)
         {
-            var query = _context.MenuItems.AsQueryable();
+            if (extraDto == null)
+                return BadRequest("Invalid extra data.");
 
-            if (!string.IsNullOrWhiteSpace(name))
+            var menuItemExists = await _context.MenuItems.AnyAsync(m => m.Id == extraDto.MenuItemId);
+            if (!menuItemExists)
+                return NotFound("Menu item not found.");
+
+            var extra = new Extra
             {
-                query = query.Where(m => m.Name.Contains(name));
-            }
+                Id = Guid.NewGuid(),
+                Name = extraDto.Name,
+                Price = extraDto.Price,
+                ImagePath = extraDto.ImagePath,
+                MenuItemId = extraDto.MenuItemId
+            };
 
-            if (categoryId.HasValue)
-            {
-                query = query.Where(m => m.CategoryId == categoryId);
-            }
+            _context.Extras.Add(extra);
+            await _context.SaveChangesAsync();
 
-            if (minPrice.HasValue)
-            {
-                query = query.Where(m => m.Price >= minPrice);
-            }
-
-            if (maxPrice.HasValue)
-            {
-                query = query.Where(m => m.Price <= maxPrice);
-            }
-
-            if (hasOffer.HasValue)
-            {
-                if (hasOffer.Value)
-                {
-                    query = query.Where(m => m.Offers != null && m.Offers > 0);
-                }
-                else
-                {
-                    query = query.Where(m => m.Offers == null || m.Offers == 0);
-                }
-            }
-
-            var results = await query.ToListAsync();
-
-            return Ok(results);
+            extraDto.Id = extra.Id; // Return the created Extra with Id
+            return CreatedAtAction(nameof(GetExtra), new { id = extraDto.Id }, extraDto);
         }
 
-        // ✅ Get Top 10 Sold Dishes
-        [HttpGet("TopSoldDishes")]
-        public async Task<IActionResult> GetTopSoldDishes()
+        // Delete an Extra
+        [HttpDelete("DeleteExtra/{id}")]
+        public async Task<ActionResult> DeleteExtra(Guid id)
         {
-            var topDishes = await _context.MenuItems
-                .Select(m => new
+            var extra = await _context.Extras.FindAsync(id);
+
+            if (extra == null)
+                return NotFound("Extra not found.");
+
+            _context.Extras.Remove(extra);
+            await _context.SaveChangesAsync();
+
+            return NoContent(); // Successfully deleted
+        }
+
+        // Update an Extra
+        [HttpPut("UpdateExtra/{id}")]
+        public async Task<ActionResult<ExtraDto>> UpdateExtra(Guid id, ExtraDto extraDto)
+        {
+            if (id != extraDto.Id)
+                return BadRequest("ID mismatch.");
+
+            var extra = await _context.Extras.FindAsync(id);
+            if (extra == null)
+                return NotFound("Extra not found.");
+
+            extra.Name = extraDto.Name;
+            extra.Price = extraDto.Price;
+            extra.ImagePath = extraDto.ImagePath;
+            extra.MenuItemId = extraDto.MenuItemId;
+
+            await _context.SaveChangesAsync();
+
+            return Ok(extraDto); // Return updated ExtraDto
+        }
+
+        // Get all Extras
+        [HttpGet("GetExtras")]
+        public async Task<ActionResult<IEnumerable<ExtraDto>>> GetExtras()
+        {
+            var extras = await _context.Extras
+                .Include(e => e.MenuItem)
+                .Select(e => new ExtraDto
                 {
-                    m.Id,
-                    m.Name,
-                    m.ImagePath,
-                    m.Price,
-                    TotalSold = _context.OrderItems.Where(oi => oi.Order.Status == OrderStatus.Completed && oi.Order.Status != OrderStatus.Cancelled && oi.OrderId != Guid.Empty)
-                                                   .Where(oi => oi.OrderId != Guid.Empty && oi.Customizations.Count == 0)
-                                                   .Sum(oi => oi.Quantity)
+                    Id = e.Id,
+                    Name = e.Name,
+                    Price = e.Price,
+                    ImagePath = e.ImagePath,
+                    MenuItemId = e.MenuItemId
                 })
-                .OrderByDescending(m => m.TotalSold)
-                .Take(10)
                 .ToListAsync();
 
-            return Ok(topDishes);
+            return Ok(extras);
         }
 
+        // Get a specific Extra by ID
+        [HttpGet("GetExtra/{id}")]
+        public async Task<ActionResult<ExtraDto>> GetExtra(Guid id)
+        {
+            var extra = await _context.Extras
+                .Include(e => e.MenuItem)
+                .FirstOrDefaultAsync(e => e.Id == id);
+
+            if (extra == null)
+                return NotFound("Extra not found.");
+
+            var extraDto = new ExtraDto
+            {
+                Id = extra.Id,
+                Name = extra.Name,
+                Price = extra.Price,
+                ImagePath = extra.ImagePath,
+                MenuItemId = extra.MenuItemId
+            };
+
+            return Ok(extraDto);
+        }
+
+        // Get Extras for a specific MenuItem
+        [HttpGet("GetExtrasOfMenuItem/{menuItemId}")]
+        public async Task<ActionResult<IEnumerable<ExtraDto>>> GetExtrasForMenuItem(Guid menuItemId)
+        {
+            var menuItemExists = await _context.MenuItems.AnyAsync(m => m.Id == menuItemId);
+            if (!menuItemExists)
+                return NotFound("Menu item not found.");
+
+            var extras = await _context.Extras
+                .Where(e => e.MenuItemId == menuItemId)
+                .Select(e => new ExtraDto
+                {
+                    Id = e.Id,
+                    Name = e.Name,
+                    Price = e.Price,
+                    ImagePath = e.ImagePath,
+                    MenuItemId = e.MenuItemId
+                })
+                .ToListAsync();
+
+            return Ok(extras);
+        }
+
+        // =========================== Sizes ===========================================
+        [HttpPost("CreateMenuItemSize")]
+        public async Task<IActionResult> CreateMenuItemSize([FromBody] MenuItemSizeDto sizeDto)
+        {
+            if (sizeDto == null)
+                return BadRequest("Invalid size data.");
+
+            var menuItemExists = await _context.MenuItems.AnyAsync(m => m.Id == sizeDto.MenuItemId);
+            if (!menuItemExists)
+                return NotFound("Menu item not found.");
+
+            var menuItemSize = new MenuItemSize
+            {
+                Id = Guid.NewGuid(),
+                Grams = sizeDto.Grams,
+                Price = sizeDto.Price,
+                MenuItemId = sizeDto.MenuItemId
+            };
+
+            _context.MenuItemSizes.Add(menuItemSize);
+            await _context.SaveChangesAsync();
+
+            sizeDto.Id = menuItemSize.Id;
+            return CreatedAtAction(nameof(GetMenuItemSizeById), new { id = sizeDto.Id }, sizeDto);
+        }
+
+        // Get all sizes for a specific menu item
+        [HttpGet("GetMenuItemSizes/{menuItemId}")]
+        public async Task<IActionResult> GetMenuItemSizesByMenuItemId(Guid menuItemId)
+        {
+            var sizes = await _context.MenuItemSizes
+                .Where(s => s.MenuItemId == menuItemId)
+                .ToListAsync();
+
+            return Ok(sizes);
+        }
+
+        // Get a specific size by its ID
+        [HttpGet("GetMenuItemSize/{id}")]
+        public async Task<IActionResult> GetMenuItemSizeById(Guid id)
+        {
+            var size = await _context.MenuItemSizes.FindAsync(id);
+            if (size == null)
+                return NotFound("Size not found.");
+
+            return Ok(size);
+        }
+
+        // Update a size
+        [HttpPut("UpdateMenuItemSize/{id}")]
+        public async Task<IActionResult> UpdateMenuItemSize(Guid id, [FromBody] MenuItemSizeDto sizeDto)
+        {
+            if (id != sizeDto.Id)
+                return BadRequest("ID mismatch.");
+
+            var size = await _context.MenuItemSizes.FindAsync(id);
+            if (size == null)
+                return NotFound("Size not found.");
+
+            size.Grams = sizeDto.Grams;
+            size.Price = sizeDto.Price;
+            size.MenuItemId = sizeDto.MenuItemId;
+
+            await _context.SaveChangesAsync();
+
+            return Ok(sizeDto);
+        }
+
+        // Delete a size
+        [HttpDelete("DeleteMenuItemSize/{id}")]
+        public async Task<IActionResult> DeleteMenuItemSize(Guid id)
+        {
+            var size = await _context.MenuItemSizes.FindAsync(id);
+            if (size == null)
+                return NotFound("Size not found.");
+
+            _context.MenuItemSizes.Remove(size);
+            await _context.SaveChangesAsync();
+
+            return NoContent();
+        }
     }
 }

@@ -12,7 +12,7 @@ namespace RMSProjectAPI.Database.Entity
         public Guid ChatID { get; set; }
 
         [Required]
-        public Guid SenderID { get; set; }  // Sender of the message
+        public Guid SenderID { get; set; }
 
         [Required]
         public string MessageText { get; set; }
