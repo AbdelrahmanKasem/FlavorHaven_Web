@@ -19,6 +19,7 @@ namespace RMSProjectAPI.Database
         public DbSet<Menu> Menus { get; set; }
         public DbSet<MenuItem> MenuItems { get; set; }
         public DbSet<MenuItemSize> MenuItemSizes { get; set; }
+        public DbSet<MenuItemSuggestion> MenuItemSuggestions { get; set; }
         public DbSet<Message> Messages { get; set; }
         public DbSet<Offer> Offers { get; set; }
         public DbSet<Order> Orders { get; set; }
@@ -38,11 +39,23 @@ namespace RMSProjectAPI.Database
             base.OnModelCreating(modelBuilder);
 
             // Disable cascade delete globally to prevent multiple cascade paths
+            modelBuilder.Entity<MenuItemSuggestion>()
+            .HasOne(ms => ms.MenuItem)
+            .WithMany(m => m.Suggestions)
+            .HasForeignKey(ms => ms.MenuItemId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<MenuItemSuggestion>()
+                .HasOne(ms => ms.SuggestedItem)
+                .WithMany()
+                .HasForeignKey(ms => ms.SuggestedItemId)
+                .OnDelete(DeleteBehavior.Restrict);
             foreach (var foreignKey in modelBuilder.Model.GetEntityTypes()
                 .SelectMany(e => e.GetForeignKeys()))
             {
                 foreignKey.DeleteBehavior = DeleteBehavior.Restrict;
             }
+
         }
 
         //protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)

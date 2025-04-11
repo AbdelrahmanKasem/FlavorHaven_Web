@@ -203,7 +203,7 @@ namespace RMSProjectAPI.Controllers
                 Description = menuItemDto.Description,
                 ImagePath = menuItemDto.ImagePath,
                 Price = menuItemDto.Price,
-                //Duration = menuItemDto.Duration,
+                Duration = menuItemDto.Duration,
                 //Offers = menuItemDto.Offers,
                 CategoryId = menuItemDto.CategoryId
             };
@@ -508,6 +508,122 @@ namespace RMSProjectAPI.Controllers
             await _context.SaveChangesAsync();
 
             return NoContent();
+        }
+
+        // =============================== Suggestions =====================================
+        [HttpPost("{menuItemId}/suggestions")]
+        public async Task<IActionResult> AddSuggestion(Guid menuItemId, [FromBody] AddSuggestionDTO dto)
+        {
+            if (!await _context.MenuItems.AnyAsync(m => m.Id == menuItemId) ||
+                !await _context.MenuItems.AnyAsync(m => m.Id == dto.SuggestedItemId))
+                return NotFound("Menu item or suggested item not found");
+
+            var exists = await _context.MenuItemSuggestions.AnyAsync(s =>
+                s.MenuItemId == menuItemId && s.SuggestedItemId == dto.SuggestedItemId);
+
+            if (exists)
+                return BadRequest("This suggestion already exists");
+
+            var suggestion = new MenuItemSuggestion
+            {
+                Id = Guid.NewGuid(),
+                MenuItemId = menuItemId,
+                SuggestedItemId = dto.SuggestedItemId
+            };
+
+            _context.MenuItemSuggestions.Add(suggestion);
+            await _context.SaveChangesAsync();
+
+            return Ok(suggestion);
+        }
+
+        [HttpDelete("{menuItemId}/suggestions/{suggestedItemId}")]
+        public async Task<IActionResult> DeleteSuggestion(Guid menuItemId, Guid suggestedItemId)
+        {
+            var suggestion = await _context.MenuItemSuggestions.FirstOrDefaultAsync(s =>
+                s.MenuItemId == menuItemId && s.SuggestedItemId == suggestedItemId);
+
+            if (suggestion == null)
+                return NotFound("Suggestion not found");
+
+            _context.MenuItemSuggestions.Remove(suggestion);
+            await _context.SaveChangesAsync();
+
+            return NoContent();
+        }
+
+        [HttpGet("{menuItemId}/suggestions")]
+        public async Task<IActionResult> GetSuggestions(Guid menuItemId)
+        {
+            var suggestions = await _context.MenuItemSuggestions
+                .Where(s => s.MenuItemId == menuItemId)
+                .Include(s => s.SuggestedItem)
+                .Select(s => new SuggestedItemDto
+                {
+                    Id = s.SuggestedItem.Id,
+                    Name = s.SuggestedItem.Name,
+                    Price = s.SuggestedItem.Price,
+                    ImageUrl = s.SuggestedItem.ImagePath
+                }).ToListAsync();
+
+            return Ok(suggestions);
+        }
+
+        // ✅ Search Menu Items
+        [HttpGet("SearchMenuItems")]
+        public async Task<IActionResult> SearchMenuItems([FromQuery] string query)
+        {
+            if (string.IsNullOrWhiteSpace(query))
+                return BadRequest("Search query is required.");
+
+            var results = await _context.MenuItems
+                .Where(mi => mi.Name.Contains(query) || mi.Description.Contains(query))
+                .Select(mi => new
+                {
+                    mi.Id,
+                    mi.Name,
+                    mi.Description,
+                    mi.ImagePath,
+                    mi.Price,
+                    mi.Duration
+                })
+                .ToListAsync();
+
+            if (results.Count == 0)
+                return NotFound("No menu items matched your search.");
+
+            return Ok(results);
+        }
+
+        [HttpGet("TopSoldMenuItems")]
+        public async Task<IActionResult> GetTopSoldMenuItemsLast30Days([FromQuery] int count = 5)
+        {
+            var thirtyDaysAgo = DateTime.UtcNow.AddDays(-30);
+
+            var topItems = await _context.OrderItems
+                .Include(oi => oi.MenuItem)
+                .Include(oi => oi.Order) // Needed to filter by OrderDate
+                .Where(oi => oi.Order.OrderDate >= thirtyDaysAgo)
+                .GroupBy(oi => new
+                {
+                    oi.MenuItemId,
+                    oi.MenuItem.Name,
+                    oi.MenuItem.ImagePath,
+                    oi.MenuItem.Description
+                })
+                .Select(g => new
+                {
+                    MenuItemId = g.Key.MenuItemId,
+                    Name = g.Key.Name,
+                    ImagePath = g.Key.ImagePath,
+                    Description = g.Key.Description,
+                    TotalSold = g.Sum(oi => oi.Quantity)
+                })
+                .OrderByDescending(item => item.TotalSold)
+                .Take(count)
+                .ToListAsync();
+
+            return Ok(topItems);
         }
     }
 }

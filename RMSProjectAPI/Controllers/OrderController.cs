@@ -25,280 +25,169 @@ namespace RMSProjectAPI.Controllers
 
         }
 
-        // GET: api/Order
-        [HttpGet("GetOrders")]
-        public async Task<ActionResult<IEnumerable<OrderDto>>> GetOrders()
+        [HttpPost("CreateOrder")]
+        public async Task<ActionResult<OrderDto>> CreateOrder(CreateOrderDto createOrderDto)
         {
-            var orders = await _context.Orders
-                .Include(o => o.OrderItems)
-                .Include(o => o.Customer)
-                .ToListAsync();
-
-            return orders.Select(o => MapToOrderDto(o)).ToList();
-        }
-
-        // GET: api/Order/5
-        [HttpGet("GetOrder/{id}")]
-        public async Task<ActionResult<OrderDto>> GetOrder(Guid id)
-        {
-            var order = await _context.Orders
-                .Include(o => o.OrderItems)
-                .Include(o => o.Customer)
-                .FirstOrDefaultAsync(o => o.Id == id);
-
-            if (order == null)
-            {
-                return NotFound();
-            }
-
-            return MapToOrderDto(order);
-        }
-
-        // POST: api/Order
-        //[HttpPost("CreateOrder")]
-        //public async Task<ActionResult<OrderDto>> CreateOrder(CreateOrderDto createOrderDto)
-        ////public async Task<ActionResult<OrderDto>> CreateOrder()
-        //{
-
-        //    if (!Enum.TryParse<OrderType>(createOrderDto.Type, out var orderType))
-        //    {
-        //        return BadRequest("Invalid order type");
-        //    }
-
-        //    var order = new Order
-        //    {
-        //        Id = Guid.NewGuid(),
-        //        OrderDate = DateTime.UtcNow,
-        //        Status = OrderStatus.Pending,
-        //        Type = orderType,
-        //        PaymentSystem = createOrderDto.PaymentSystem,
-        //        Note = createOrderDto.Note,
-        //        CustomerId = createOrderDto.CustomerId,
-        //        OrderItems = new List<OrderItem>()
-        //    };
-
-        //    decimal totalPrice = 0;
-
-        //    foreach (var itemDto in createOrderDto.OrderItems)
-        //    {
-        //        if (!Enum.TryParse<SpicyLevel>(itemDto.SpicyLevel, out var spicyLevel))
-        //        {
-        //            return BadRequest("Invalid spicy level");
-        //        }
-
-        //        var menuItem = await _context.MenuItems.FindAsync(itemDto.MenuItemId);
-        //        if (menuItem == null)
-        //        {
-        //            return BadRequest($"MenuItem with id {itemDto.MenuItemId} not found");
-        //        }
-
-        //        var orderItem = new OrderItem
-        //        {
-        //            Id = Guid.NewGuid(),
-        //            Quantity = itemDto.Quantity,
-        //            Note = itemDto.Note,
-        //            SpicyLevel = spicyLevel,
-        //            Price = menuItem.Price
-        //        };
-
-        //        // Calculate price with customizations
-        //        decimal itemPrice = menuItem.Price * itemDto.Quantity;
-        //        foreach (var customizationDto in itemDto.Customizations)
-        //        {
-        //            orderItem.Customizations.Add(new OrderItemCustomization
-        //            {
-        //                Id = Guid.NewGuid(),
-        //                Name = customizationDto.Name,
-        //                ExtraPrice = customizationDto.ExtraPrice,
-        //                OrderItemId = orderItem.Id
-        //            });
-        //            itemPrice += customizationDto.ExtraPrice * itemDto.Quantity;
-        //        }
-
-        //        orderItem.Price = itemPrice;
-        //        totalPrice += itemPrice;
-
-        //        order.OrderItems.Add(orderItem);
-        //    }
-
-        //    order.Price = totalPrice;
-
-        //    _context.Orders.Add(order);
-        //    await _context.SaveChangesAsync();
-
-        //    _context.Orders.Add(order);
-        //    await _context.SaveChangesAsync();
-
-        //    // Send real-time notification to chefs
-        //    var orderDto = MapToOrderDto(order);
-        //    await _hubContext.Clients.All.SendAsync("ReceiveNewOrder", "This is just a message");
-
-        //    //return Ok();
-
-        //    return CreatedAtAction(nameof(GetOrder), new { id = order.Id }, orderDto);
-
-        //    ////return CreatedAtAction(nameof(GetOrder), new { id = order.Id }, MapToOrderDto(order));
-        //}
-
-        //[HttpPost("CreateOrder")]
-        //public async Task<ActionResult<OrderDto>> CreateOrder(CreateOrderDto createOrderDto)
-        //{
-        //    if (!Enum.TryParse<OrderType>(createOrderDto.Type, out var orderType))
-        //    {
-        //        return BadRequest("Invalid order type");
-        //    }
-
-        //    var order = new Order
-        //    {
-        //        Id = Guid.NewGuid(),
-        //        OrderDate = DateTime.UtcNow,
-        //        Status = OrderStatus.Pending,
-        //        Type = orderType,
-        //        PaymentSystem = createOrderDto.PaymentSystem,
-        //        Note = createOrderDto.Note,
-        //        CustomerId = createOrderDto.CustomerId,
-        //        OrderItems = new List<OrderItem>()
-        //    };
-
-        //    decimal totalPrice = 0;
-
-        //    foreach (var itemDto in createOrderDto.OrderItems)
-        //    {
-        //        if (!Enum.TryParse<SpicyLevel>(itemDto.SpicyLevel, out var spicyLevel))
-        //        {
-        //            return BadRequest("Invalid spicy level");
-        //        }
-
-        //        var menuItem = await _context.MenuItems.FindAsync(itemDto.MenuItemId);
-        //        if (menuItem == null)
-        //        {
-        //            return BadRequest($"MenuItem with id {itemDto.MenuItemId} not found");
-        //        }
-
-        //        var orderItem = new OrderItem
-        //        {
-        //            Id = Guid.NewGuid(),
-        //            Quantity = itemDto.Quantity,
-        //            Note = itemDto.Note,
-        //            SpicyLevel = spicyLevel,
-        //            Price = menuItem.Price
-        //        };
-
-        //        // Calculate price without customizations
-        //        decimal itemPrice = menuItem.Price * itemDto.Quantity;
-
-        //        orderItem.Price = itemPrice;
-        //        totalPrice += itemPrice;
-
-        //        order.OrderItems.Add(orderItem);
-        //    }
-
-        //    order.Price = totalPrice;
-
-        //    order.EstimatedPreparationTime = TimeSpan.FromMinutes(order.OrderItems.Sum(item => item.Quantity) * 3);
-
-        //    _context.Orders.Add(order);
-        //    await _context.SaveChangesAsync();
-
-        //    // Send real-time notification to chefs
-        //    var orderDto = MapToOrderDto(order);
-        //    await _hubContext.Clients.All.SendAsync("ReceiveNewOrder", "This is just a message");
-
-        //    return CreatedAtAction(nameof(GetOrder), new { id = order.Id }, orderDto);
-        //}
-
-        [HttpPost("PlaceOrderFromCart")]
-        public async Task<ActionResult<OrderDto>> PlaceOrderFromCart(Guid userId, string paymentSystem, string? note, string type)
-        {
-            var cart = await _context.Carts
-                .Include(c => c.Items)
-                .FirstOrDefaultAsync(c => c.UserId == userId && !c.IsCheckedOut);
-
-            if (cart == null || !cart.Items.Any())
-                return BadRequest("Cart is empty or not found.");
-
-            if (!Enum.TryParse<OrderType>(type, out var orderType))
+            // Validate the Order Type
+            if (!Enum.TryParse<OrderType>(createOrderDto.Type.ToString(), out var orderType))
                 return BadRequest("Invalid order type");
 
+            // Create the Order object
             var order = new Order
             {
                 Id = Guid.NewGuid(),
                 OrderDate = DateTime.UtcNow,
                 Status = OrderStatus.Pending,
                 Type = orderType,
-                PaymentSystem = paymentSystem,
-                Note = note,
-                CustomerId = userId,
-                OrderItems = new List<OrderItem>(),
-                Price = cart.TotalPrice,
-                EstimatedPreparationTime = TimeSpan.FromMinutes(cart.Items.Sum(i => i.Quantity) * 3)
+                Latitude = createOrderDto.Latitude,
+                Longitude = createOrderDto.Longitude,
+                Address = createOrderDto.Address,
+                PaymentSystem = createOrderDto.PaymentSystem,
+                TransactionId = createOrderDto.TransactionId,
+                Note = createOrderDto.Note,
+                CustomerId = createOrderDto.CustomerId,
+                OrderItems = new List<OrderItem>()
             };
 
-            foreach (var cartItem in cart.Items)
+            decimal totalPrice = 0;
+            TimeSpan totalTime = TimeSpan.Zero;
+            foreach (var itemDto in createOrderDto.OrderItems)
             {
+                // Retrieve the MenuItem and MenuItemSize
+                var menuItem = await _context.MenuItems
+                    .Include(mi => mi.Sizes)  // Ensure you load the Sizes of the MenuItem
+                    .FirstOrDefaultAsync(mi => mi.Id == itemDto.MenuItemId);
+
+                if (menuItem == null)
+                    return BadRequest($"MenuItem with ID {itemDto.MenuItemId} not found");
+
+                // Find the specific MenuItemSize based on the given MenuItemSizeId
+                var menuItemSize = menuItem.Sizes.FirstOrDefault(ms => ms.Id == itemDto.MenuItemSizeId);
+                totalTime += menuItem.Duration;
+                if (menuItemSize == null)
+                    return BadRequest($"MenuItemSize with ID {itemDto.MenuItemSizeId} not found for MenuItem with ID {itemDto.MenuItemId}");
+
+                // Create the OrderItem
                 var orderItem = new OrderItem
                 {
                     Id = Guid.NewGuid(),
-                    Quantity = cartItem.Quantity,
-                    Note = "", // Could add optional note per item in CartItem if needed
-                    SpicyLevel = SpicyLevel.Medium, // Default or fetch if stored in cart
-                    Price = cartItem.PriceAtTimeOfOrder,
-                    MenuItemId = cartItem.MenuItemId
+                    Quantity = itemDto.Quantity,
+                    Note = itemDto.Note,
+                    SpicyLevel = itemDto.SpicyLevel,
+                    Price = menuItemSize.Price * itemDto.Quantity,  // Calculate price based on size and quantity
+                    MenuItemId = menuItem.Id,
+                    MenuItemSizeId = menuItemSize.Id  // Link the size to the OrderItem
                 };
 
+                totalPrice += orderItem.Price;
                 order.OrderItems.Add(orderItem);
             }
 
-            // Mark the cart as checked out
-            cart.IsCheckedOut = true;
-
+            // Set the total price and estimated preparation time
+            order.Price = totalPrice;
+            order.EstimatedPreparationTime = totalTime; // Example, can be adjusted based on menu item or other factors
+            // Add the order to the database
             _context.Orders.Add(order);
             await _context.SaveChangesAsync();
 
+            // Map to OrderDto and return the result
             var orderDto = MapToOrderDto(order);
+            orderDto.EstimatedPreparationTime = totalTime;
+
+            // SignalR: Notify chefs
             await _hubContext.Clients.All.SendAsync("ReceiveNewOrder", orderDto);
 
             return CreatedAtAction(nameof(GetOrder), new { id = order.Id }, orderDto);
         }
 
-        // PUT: api/Order/5/status
-        [HttpPut("Order/{id}/Status")]
-        public async Task<IActionResult> UpdateOrderStatus(Guid id, UpdateOrderStatusDto updateOrderStatusDto)
+        [HttpGet("GetAllOrders")]
+        public async Task<ActionResult<List<OrderDto>>> GetAllOrders()
         {
-            if (!Enum.TryParse<OrderStatus>(updateOrderStatusDto.Status, out var orderStatus))
-            {
-                return BadRequest("Invalid order status");
-            }
+            var orders = await _context.Orders
+                .Include(o => o.OrderItems)
+                .ToListAsync();
 
-            var order = await _context.Orders.FindAsync(id);
+            var orderDtos = orders.Select(o => MapToOrderDto(o)).ToList();
+            return Ok(orderDtos);
+        }
+
+        [HttpGet("GetOrder/{id}")]
+        public async Task<ActionResult<OrderDto>> GetOrder(Guid id)
+        {
+            var order = await _context.Orders
+                .Include(o => o.OrderItems)
+                .FirstOrDefaultAsync(o => o.Id == id);
+
             if (order == null)
-            {
-                return NotFound();
-            }
+                return NotFound("Order not found");
 
-            order.Status = orderStatus;
+            return Ok(MapToOrderDto(order));
+        }
+
+        [HttpPut("UpdateStatus/{id}")]
+        public async Task<IActionResult> UpdateOrderStatus(Guid id, UpdateOrderStatusDto dto)
+        {
+            var order = await _context.Orders.FindAsync(id);
+
+            if (order == null)
+                return NotFound("Order not found");
+
+            if (!Enum.TryParse<OrderStatus>(dto.Status, true, out var status))
+                return BadRequest("Invalid status");
+
+            order.Status = status;
             await _context.SaveChangesAsync();
-
-            await _hubContext.Clients.Group("Chefs").SendAsync("OrderStatusUpdated",
-            new { OrderId = id, NewStatus = order.Status.ToString() });
 
             return NoContent();
         }
 
-        // DELETE: api/Order/5
         [HttpDelete("DeleteOrder/{id}")]
         public async Task<IActionResult> DeleteOrder(Guid id)
         {
-            var order = await _context.Orders.FindAsync(id);
+            var order = await _context.Orders
+                .Include(o => o.OrderItems)
+                .FirstOrDefaultAsync(o => o.Id == id);
+
             if (order == null)
-            {
-                return NotFound();
-            }
+                return NotFound("Order not found");
 
+            _context.OrderItems.RemoveRange(order.OrderItems);
             _context.Orders.Remove(order);
-            await _context.SaveChangesAsync();
 
+            await _context.SaveChangesAsync();
             return NoContent();
+        }
+
+        [HttpGet("CustomerOrders/{customerId}")]
+        public async Task<ActionResult<List<OrderDto>>> GetOrdersByCustomer(Guid customerId)
+        {
+            var orders = await _context.Orders
+                .Where(o => o.CustomerId == customerId)
+                .Include(o => o.OrderItems)
+                .ToListAsync();
+
+            var orderDtos = orders.Select(o => MapToOrderDto(o)).ToList();
+            return Ok(orderDtos);
+        }
+
+        [HttpGet("FilterOrders")]
+        public async Task<ActionResult<List<OrderDto>>> FilterOrders([FromQuery] string? status, [FromQuery] DateTime? from, [FromQuery] DateTime? to)
+        {
+            var query = _context.Orders.Include(o => o.OrderItems).AsQueryable();
+
+            if (!string.IsNullOrEmpty(status) && Enum.TryParse<OrderStatus>(status, true, out var orderStatus))
+                query = query.Where(o => o.Status == orderStatus);
+
+            if (from.HasValue)
+                query = query.Where(o => o.OrderDate >= from.Value);
+
+            if (to.HasValue)
+                query = query.Where(o => o.OrderDate <= to.Value);
+
+            var orders = await query.ToListAsync();
+            var orderDtos = orders.Select(o => MapToOrderDto(o)).ToList();
+
+            return Ok(orderDtos);
         }
 
         private OrderDto MapToOrderDto(Order order)
@@ -307,10 +196,11 @@ namespace RMSProjectAPI.Controllers
             {
                 Id = order.Id,
                 OrderDate = order.OrderDate,
-                Status = order.Status.ToString(),
-                Type = order.Type.ToString(),
+                Status = order.Status,
+                Type = order.Type,
                 Price = order.Price,
                 PaymentSystem = order.PaymentSystem,
+                TransactionId = order.TransactionId,
                 Note = order.Note,
                 CustomerId = order.CustomerId,
                 OrderItems = order.OrderItems.Select(oi => new OrderItemDto
@@ -318,7 +208,7 @@ namespace RMSProjectAPI.Controllers
                     Id = oi.Id,
                     Quantity = oi.Quantity,
                     Note = oi.Note,
-                    SpicyLevel = oi.SpicyLevel.ToString(),
+                    SpicyLevel = oi.SpicyLevel,
                     Price = oi.Price,
                     MenuItemId = oi.MenuItemId,
                     MenuItemName = _context.MenuItems.FirstOrDefault(mi => mi.Id == oi.MenuItemId)?.Name ?? "Unknown"

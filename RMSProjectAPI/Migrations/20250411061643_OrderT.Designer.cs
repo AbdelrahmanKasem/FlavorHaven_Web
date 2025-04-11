@@ -12,8 +12,8 @@ using RMSProjectAPI.Database;
 namespace RMSProjectAPI.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250410045712_Cart")]
-    partial class Cart
+    [Migration("20250411061643_OrderT")]
+    partial class OrderT
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -215,8 +215,14 @@ namespace RMSProjectAPI.Migrations
                     b.Property<Guid>("CartId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("MenuItemDescription")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<Guid>("MenuItemId")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("MenuItemImage")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("MenuItemName")
                         .HasColumnType("nvarchar(max)");
@@ -450,6 +456,27 @@ namespace RMSProjectAPI.Migrations
                     b.ToTable("MenuItemSizes");
                 });
 
+            modelBuilder.Entity("RMSProjectAPI.Database.Entity.MenuItemSuggestion", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("MenuItemId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("SuggestedItemId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MenuItemId");
+
+                    b.HasIndex("SuggestedItemId");
+
+                    b.ToTable("MenuItemSuggestions");
+                });
+
             modelBuilder.Entity("RMSProjectAPI.Database.Entity.Message", b =>
                 {
                     b.Property<Guid>("MessageID")
@@ -523,11 +550,20 @@ namespace RMSProjectAPI.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("Address")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<Guid>("CustomerId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<TimeSpan>("EstimatedPreparationTime")
                         .HasColumnType("time");
+
+                    b.Property<string>("Latitude")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Longitude")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Note")
                         .HasColumnType("nvarchar(max)");
@@ -545,6 +581,9 @@ namespace RMSProjectAPI.Migrations
 
                     b.Property<int>("Status")
                         .HasColumnType("int");
+
+                    b.Property<string>("TransactionId")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("Type")
                         .HasColumnType("int");
@@ -565,6 +604,9 @@ namespace RMSProjectAPI.Migrations
                     b.Property<Guid>("MenuItemId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<Guid>("MenuItemSizeId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<string>("Note")
                         .HasColumnType("nvarchar(max)");
 
@@ -581,6 +623,10 @@ namespace RMSProjectAPI.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("MenuItemId");
+
+                    b.HasIndex("MenuItemSizeId");
 
                     b.HasIndex("OrderId");
 
@@ -977,6 +1023,25 @@ namespace RMSProjectAPI.Migrations
                     b.Navigation("MenuItem");
                 });
 
+            modelBuilder.Entity("RMSProjectAPI.Database.Entity.MenuItemSuggestion", b =>
+                {
+                    b.HasOne("RMSProjectAPI.Database.Entity.MenuItem", "MenuItem")
+                        .WithMany("Suggestions")
+                        .HasForeignKey("MenuItemId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("RMSProjectAPI.Database.Entity.MenuItem", "SuggestedItem")
+                        .WithMany()
+                        .HasForeignKey("SuggestedItemId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("MenuItem");
+
+                    b.Navigation("SuggestedItem");
+                });
+
             modelBuilder.Entity("RMSProjectAPI.Database.Entity.Message", b =>
                 {
                     b.HasOne("RMSProjectAPI.Database.Entity.Chat", "Chat")
@@ -1012,11 +1077,27 @@ namespace RMSProjectAPI.Migrations
 
             modelBuilder.Entity("RMSProjectAPI.Database.Entity.OrderItem", b =>
                 {
+                    b.HasOne("RMSProjectAPI.Database.Entity.MenuItem", "MenuItem")
+                        .WithMany()
+                        .HasForeignKey("MenuItemId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("RMSProjectAPI.Database.Entity.MenuItemSize", "MenuItemSize")
+                        .WithMany()
+                        .HasForeignKey("MenuItemSizeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("RMSProjectAPI.Database.Entity.Order", "Order")
                         .WithMany("OrderItems")
                         .HasForeignKey("OrderId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.Navigation("MenuItem");
+
+                    b.Navigation("MenuItemSize");
 
                     b.Navigation("Order");
                 });
@@ -1085,6 +1166,8 @@ namespace RMSProjectAPI.Migrations
                     b.Navigation("Extras");
 
                     b.Navigation("Sizes");
+
+                    b.Navigation("Suggestions");
                 });
 
             modelBuilder.Entity("RMSProjectAPI.Database.Entity.Order", b =>

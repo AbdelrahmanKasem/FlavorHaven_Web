@@ -5,20 +5,26 @@
 namespace RMSProjectAPI.Migrations
 {
     /// <inheritdoc />
-    public partial class CartItem : Migration
+    public partial class Order : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AddColumn<string>(
-                name: "MenuItemDescription",
-                table: "CartItems",
+                name: "Address",
+                table: "Orders",
                 type: "nvarchar(max)",
                 nullable: true);
 
             migrationBuilder.AddColumn<string>(
-                name: "MenuItemImage",
-                table: "CartItems",
+                name: "Latitude",
+                table: "Orders",
+                type: "nvarchar(max)",
+                nullable: true);
+
+            migrationBuilder.AddColumn<string>(
+                name: "Longitude",
+                table: "Orders",
                 type: "nvarchar(max)",
                 nullable: true);
         }
@@ -27,12 +33,16 @@ namespace RMSProjectAPI.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropColumn(
-                name: "MenuItemDescription",
-                table: "CartItems");
+                name: "Address",
+                table: "Orders");
 
             migrationBuilder.DropColumn(
-                name: "MenuItemImage",
-                table: "CartItems");
+                name: "Latitude",
+                table: "Orders");
+
+            migrationBuilder.DropColumn(
+                name: "Longitude",
+                table: "Orders");
         }
     }
 }

@@ -12,6 +12,8 @@ namespace RMSProjectAPI.Model
         public decimal Price { get; set; }
         public TimeSpan Duration { get; set; }
         public Guid CategoryId { get; set; }
+
+        public List<SuggestedItemDto> SuggestedItems { get; set; }
     }
 
     public class UpdateMenuItemDto

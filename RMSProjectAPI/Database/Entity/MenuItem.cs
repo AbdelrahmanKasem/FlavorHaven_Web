@@ -28,5 +28,6 @@ namespace RMSProjectAPI.Database.Entity
 
         public virtual List<Extra> Extras { get; set; }
         public List<MenuItemSize> Sizes { get; set; }
+        public List<MenuItemSuggestion> Suggestions { get; set; }
     }
 }

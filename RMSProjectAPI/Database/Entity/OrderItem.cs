@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace RMSProjectAPI.Database.Entity
 {
@@ -20,10 +21,20 @@ namespace RMSProjectAPI.Database.Entity
         public Guid MenuItemId { get; set; }
 
         [Required]
+        public Guid MenuItemSizeId { get; set; }  // Added MenuItemSizeId for the size
+
+        [ForeignKey("MenuItemId")]
+        public MenuItem MenuItem { get; set; }
+
+        [ForeignKey("MenuItemSizeId")]
+        public MenuItemSize MenuItemSize { get; set; }
+
+        [Required]
         public Guid OrderId { get; set; }
         [ForeignKey(nameof(OrderId))]
         public virtual Order Order { get; set; }
     }
 
+    [JsonConverter(typeof(JsonStringEnumConverter))]
     public enum SpicyLevel { None, Mild, Medium, Hot, ExtraHot }
 }
