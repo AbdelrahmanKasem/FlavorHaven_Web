@@ -90,8 +90,5 @@ namespace RMSProjectAPI.Controllers
 
             return Ok("Order assigned successfully");
         }
-
-        
-
     }
 }
