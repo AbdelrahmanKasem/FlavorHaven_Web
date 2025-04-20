@@ -9,9 +9,10 @@ namespace RMSProjectAPI.Database.Entity
         [Key]
         public Guid Id { get; set; }
         public DateTime OrderDate { get; set; }
-        public OrderStatus Status { get; set; } // Enum
-        public OrderType Type { get; set; } // Enum
+        public OrderStatus Status { get; set; } 
+        public OrderType Type { get; set; }
         public decimal Price { get; set; }
+        public decimal DeliveryFee { get; set; }
         public string? Latitude { get; set; }
         public string? Longitude { get; set; }
         public string? Address { get; set; }
@@ -27,10 +28,25 @@ namespace RMSProjectAPI.Database.Entity
         [ForeignKey(nameof(CustomerId))]
         public virtual User Customer { get; set; }
         public virtual ICollection<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
+
+        // Waiter
+        public Guid? WaiterId { get; set; }
+        [ForeignKey(nameof(WaiterId))]
+        public virtual User? Waiter { get; set; }
+
+        // Delivery Person
+        public Guid? DeliveryId { get; set; }
+        [ForeignKey(nameof(DeliveryId))]
+        public virtual User? DeliveryPerson { get; set; }
+
+        public Guid? TableId { get; set; }
+
+        [ForeignKey(nameof(TableId))]
+        public virtual Table? Table { get; set; }
     }
 
     [JsonConverter(typeof(JsonStringEnumConverter))]
-    public enum OrderStatus { Pending, Paid, Completed, Cancelled }
+    public enum OrderStatus { Pending, Paid, InProgress, Ready, Completed, Cancelled }
 
     [JsonConverter(typeof(JsonStringEnumConverter))]
     public enum OrderType { DineIn, TakeAway, Delivery }

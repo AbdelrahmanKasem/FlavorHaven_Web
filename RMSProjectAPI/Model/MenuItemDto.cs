@@ -11,6 +11,8 @@ namespace RMSProjectAPI.Model
         public string ImagePath { get; set; }
         public decimal Price { get; set; }
         public TimeSpan Duration { get; set; }
+        public int TotalRating { get; set; }
+        public int RatingCount { get; set; }
         public Guid CategoryId { get; set; }
 
         public List<SuggestedItemDto> SuggestedItems { get; set; }
@@ -24,4 +26,11 @@ namespace RMSProjectAPI.Model
         public decimal Price { get; set; }
         public TimeSpan Duration { get; set; }
     }
+
+    public class MenuItemRatingDto
+    {
+        public Guid MenuItemId { get; set; }
+        public int Rating { get; set; } // Rating between 1 to 5
+    }
+
 }

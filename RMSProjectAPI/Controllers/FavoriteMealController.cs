@@ -22,7 +22,6 @@ namespace RMSProjectAPI.Controllers
         }
 
         // Get
-        // GET: api/FavoriteMeal/user/{userId}
         [HttpGet("user/{userId}")]
         public async Task<ActionResult<IEnumerable<FavoriteMealDto>>> GetUserFavoriteMeals(Guid userId)
         {
@@ -40,7 +39,6 @@ namespace RMSProjectAPI.Controllers
         }
 
         // Add
-        // POST: api/FavoriteMeal
         [HttpPost]
         public async Task<ActionResult> AddFavoriteMeal([FromBody] FavoriteMealDto favoriteMealDto)
         {
@@ -63,7 +61,6 @@ namespace RMSProjectAPI.Controllers
         }
 
         // Remove
-        // DELETE: api/FavoriteMeal/{userId}/{menuItemId}
         [HttpDelete("{userId}/{menuItemId}")]
         public async Task<ActionResult> RemoveFavoriteMeal(Guid userId, Guid menuItemId)
         {

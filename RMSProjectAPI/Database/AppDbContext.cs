@@ -34,33 +34,71 @@ namespace RMSProjectAPI.Database
         {
         }
 
+        //protected override void OnModelCreating(ModelBuilder modelBuilder)
+        //{
+        //    base.OnModelCreating(modelBuilder);
+
+        //    // Disable cascade delete globally to prevent multiple cascade paths
+        //    modelBuilder.Entity<MenuItemSuggestion>()
+        //    .HasOne(ms => ms.MenuItem)
+        //    .WithMany(m => m.Suggestions)
+        //    .HasForeignKey(ms => ms.MenuItemId)
+        //    .OnDelete(DeleteBehavior.Restrict);
+
+        //    modelBuilder.Entity<MenuItemSuggestion>()
+        //        .HasOne(ms => ms.SuggestedItem)
+        //        .WithMany()
+        //        .HasForeignKey(ms => ms.SuggestedItemId)
+        //        .OnDelete(DeleteBehavior.Restrict);
+        //    foreach (var foreignKey in modelBuilder.Model.GetEntityTypes()
+        //        .SelectMany(e => e.GetForeignKeys()))
+        //    {
+        //        foreignKey.DeleteBehavior = DeleteBehavior.Restrict;
+        //    }
+        //}
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
-            // Disable cascade delete globally to prevent multiple cascade paths
+            // Custom relationships for Order → User
+            modelBuilder.Entity<Order>()
+                .HasOne(o => o.Customer)
+                .WithMany()
+                .HasForeignKey(o => o.CustomerId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Order>()
+                .HasOne(o => o.Waiter)
+                .WithMany()
+                .HasForeignKey(o => o.WaiterId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Order>()
+                .HasOne(o => o.DeliveryPerson)
+                .WithMany()
+                .HasForeignKey(o => o.DeliveryId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Existing config
             modelBuilder.Entity<MenuItemSuggestion>()
-            .HasOne(ms => ms.MenuItem)
-            .WithMany(m => m.Suggestions)
-            .HasForeignKey(ms => ms.MenuItemId)
-            .OnDelete(DeleteBehavior.Restrict);
+                .HasOne(ms => ms.MenuItem)
+                .WithMany(m => m.Suggestions)
+                .HasForeignKey(ms => ms.MenuItemId)
+                .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<MenuItemSuggestion>()
                 .HasOne(ms => ms.SuggestedItem)
                 .WithMany()
                 .HasForeignKey(ms => ms.SuggestedItemId)
                 .OnDelete(DeleteBehavior.Restrict);
+
             foreach (var foreignKey in modelBuilder.Model.GetEntityTypes()
                 .SelectMany(e => e.GetForeignKeys()))
             {
                 foreignKey.DeleteBehavior = DeleteBehavior.Restrict;
             }
-
         }
 
-        //protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        //{
-        //    base.OnConfiguring(optionsBuilder);
-        //}
     }
 }

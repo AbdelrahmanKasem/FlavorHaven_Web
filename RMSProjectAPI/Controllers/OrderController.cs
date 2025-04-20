@@ -1,5 +1,4 @@
-﻿// Controllers/OrderController.cs
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using RMSProjectAPI.Database;
@@ -28,24 +27,26 @@ namespace RMSProjectAPI.Controllers
         [HttpPost("CreateOrder")]
         public async Task<ActionResult<OrderDto>> CreateOrder(CreateOrderDto createOrderDto)
         {
-            // Validate the Order Type
             if (!Enum.TryParse<OrderType>(createOrderDto.Type.ToString(), out var orderType))
                 return BadRequest("Invalid order type");
 
-            // Create the Order object
             var order = new Order
             {
                 Id = Guid.NewGuid(),
                 OrderDate = DateTime.UtcNow,
-                Status = OrderStatus.Pending,
+                Status = OrderStatus.Paid,
                 Type = orderType,
                 Latitude = createOrderDto.Latitude,
                 Longitude = createOrderDto.Longitude,
                 Address = createOrderDto.Address,
                 PaymentSystem = createOrderDto.PaymentSystem,
                 TransactionId = createOrderDto.TransactionId,
+                DeliveryFee = (decimal)createOrderDto.DeliveryFee,
                 Note = createOrderDto.Note,
                 CustomerId = createOrderDto.CustomerId,
+                DeliveryId = createOrderDto.DeliveryId,
+                WaiterId = createOrderDto.WaiterId,
+                TableId = createOrderDto.TableId,
                 OrderItems = new List<OrderItem>()
             };
 
@@ -53,48 +54,43 @@ namespace RMSProjectAPI.Controllers
             TimeSpan totalTime = TimeSpan.Zero;
             foreach (var itemDto in createOrderDto.OrderItems)
             {
-                // Retrieve the MenuItem and MenuItemSize
                 var menuItem = await _context.MenuItems
-                    .Include(mi => mi.Sizes)  // Ensure you load the Sizes of the MenuItem
+                    .Include(mi => mi.Sizes)
                     .FirstOrDefaultAsync(mi => mi.Id == itemDto.MenuItemId);
 
                 if (menuItem == null)
                     return BadRequest($"MenuItem with ID {itemDto.MenuItemId} not found");
 
-                // Find the specific MenuItemSize based on the given MenuItemSizeId
                 var menuItemSize = menuItem.Sizes.FirstOrDefault(ms => ms.Id == itemDto.MenuItemSizeId);
                 totalTime += menuItem.Duration;
                 if (menuItemSize == null)
                     return BadRequest($"MenuItemSize with ID {itemDto.MenuItemSizeId} not found for MenuItem with ID {itemDto.MenuItemId}");
 
-                // Create the OrderItem
                 var orderItem = new OrderItem
                 {
                     Id = Guid.NewGuid(),
                     Quantity = itemDto.Quantity,
                     Note = itemDto.Note,
                     SpicyLevel = itemDto.SpicyLevel,
-                    Price = menuItemSize.Price * itemDto.Quantity,  // Calculate price based on size and quantity
+                    Price = menuItemSize.Price * itemDto.Quantity,
                     MenuItemId = menuItem.Id,
-                    MenuItemSizeId = menuItemSize.Id  // Link the size to the OrderItem
+                    MenuItemSizeId = menuItemSize.Id 
                 };
 
                 totalPrice += orderItem.Price;
                 order.OrderItems.Add(orderItem);
             }
 
-            // Set the total price and estimated preparation time
-            order.Price = totalPrice;
-            order.EstimatedPreparationTime = totalTime; // Example, can be adjusted based on menu item or other factors
-            // Add the order to the database
+            order.Price = totalPrice + (decimal)(createOrderDto.DeliveryFee ?? 0);
+            order.EstimatedPreparationTime = totalTime;
+
             _context.Orders.Add(order);
             await _context.SaveChangesAsync();
 
-            // Map to OrderDto and return the result
             var orderDto = MapToOrderDto(order);
             orderDto.EstimatedPreparationTime = totalTime;
 
-            // SignalR: Notify chefs
+            // SignalR
             await _hubContext.Clients.All.SendAsync("ReceiveNewOrder", orderDto);
 
             return CreatedAtAction(nameof(GetOrder), new { id = order.Id }, orderDto);
@@ -111,6 +107,29 @@ namespace RMSProjectAPI.Controllers
             return Ok(orderDtos);
         }
 
+        [HttpGet("GetGroupedActiveOrders")]
+        public async Task<ActionResult<Dictionary<OrderStatus, List<OrderDto>>>> GetGroupedActiveOrders()
+        {
+            var today = DateTime.UtcNow.Date;
+
+            var filteredOrders = await _context.Orders
+                .Include(o => o.OrderItems)
+                .Where(o =>
+                    o.Status == OrderStatus.Paid ||
+                    o.Status == OrderStatus.InProgress ||
+                    (o.Status == OrderStatus.Ready))
+                .ToListAsync();
+
+            var groupedOrders = filteredOrders
+                .GroupBy(o => o.Status)
+                .ToDictionary(
+                    g => g.Key,
+                    g => g.Select(o => MapToOrderDto(o)).ToList()
+                );
+
+            return Ok(groupedOrders);
+        }
+
         [HttpGet("GetOrder/{id}")]
         public async Task<ActionResult<OrderDto>> GetOrder(Guid id)
         {
@@ -125,9 +144,11 @@ namespace RMSProjectAPI.Controllers
         }
 
         [HttpPut("UpdateStatus/{id}")]
-        public async Task<IActionResult> UpdateOrderStatus(Guid id, UpdateOrderStatusDto dto)
+        public async Task<ActionResult<OrderDto>> UpdateOrderStatus(Guid id, UpdateOrderStatusDto dto)
         {
-            var order = await _context.Orders.FindAsync(id);
+            var order = await _context.Orders
+                .Include(o => o.OrderItems)
+                .FirstOrDefaultAsync(o => o.Id == id);
 
             if (order == null)
                 return NotFound("Order not found");
@@ -138,7 +159,12 @@ namespace RMSProjectAPI.Controllers
             order.Status = status;
             await _context.SaveChangesAsync();
 
-            return NoContent();
+            var orderDto = MapToOrderDto(order);
+
+            // SignalR - notify clients about the updated order status
+            await _hubContext.Clients.All.SendAsync("OrderStatusUpdated", orderDto);
+
+            return Ok(orderDto); // Return full order DTO including EstimatedPreparationTime
         }
 
         [HttpDelete("DeleteOrder/{id}")]
@@ -199,10 +225,18 @@ namespace RMSProjectAPI.Controllers
                 Status = order.Status,
                 Type = order.Type,
                 Price = order.Price,
+                DeliveryFee = order.DeliveryFee,
+                Latitude = order.Latitude,
+                Longitude = order.Longitude,
+                Address = order.Address,
                 PaymentSystem = order.PaymentSystem,
                 TransactionId = order.TransactionId,
                 Note = order.Note,
+                EstimatedPreparationTime = order.EstimatedPreparationTime,
                 CustomerId = order.CustomerId,
+                DeliveryId = order.DeliveryId,
+                WaiterId = order.WaiterId,
+                TableId = order.TableId,
                 OrderItems = order.OrderItems.Select(oi => new OrderItemDto
                 {
                     Id = oi.Id,
@@ -211,6 +245,7 @@ namespace RMSProjectAPI.Controllers
                     SpicyLevel = oi.SpicyLevel,
                     Price = oi.Price,
                     MenuItemId = oi.MenuItemId,
+                    MenuItemSizeId = oi.MenuItemSizeId,
                     MenuItemName = _context.MenuItems.FirstOrDefault(mi => mi.Id == oi.MenuItemId)?.Name ?? "Unknown"
                 }).ToList()
             };
@@ -232,6 +267,47 @@ namespace RMSProjectAPI.Controllers
             };
 
             return Ok(dto);
+        }
+
+        // ============== For Delivery ======================
+        [HttpGet("GetReadyDeliveryOrders")]
+        public async Task<ActionResult<List<OrderDto>>> GetReadyDeliveryOrders()
+        {
+            var readyDeliveryOrders = await _context.Orders
+                .Where(o => o.Status == OrderStatus.Ready && o.Type == OrderType.Delivery)
+                .Include(o => o.OrderItems)
+                .ToListAsync();
+
+            var orderDtos = readyDeliveryOrders.Select(o => MapToOrderDto(o)).ToList();
+
+            return Ok(orderDtos);
+        }
+
+        [HttpGet("GetOrdersByDelivery/{deliveryId}")]
+        public async Task<ActionResult<List<OrderDto>>> GetOrdersByDelivery(Guid deliveryId)
+        {
+            var orders = await _context.Orders
+                .Where(o => o.DeliveryId == deliveryId)
+                .Include(o => o.OrderItems)
+                .ToListAsync();
+
+            var orderDtos = orders.Select(o => MapToOrderDto(o)).ToList();
+
+            return Ok(orderDtos);
+        }
+
+        // ====================== For Waiter ========================
+        [HttpGet("GetReadyWaiterOrders")]
+        public async Task<ActionResult<List<OrderDto>>> GetReadyWaiterOrders()
+        {
+            var readyDeliveryOrders = await _context.Orders
+                .Where(o => o.Status == OrderStatus.Ready && o.Type == OrderType.DineIn)
+                .Include(o => o.OrderItems)
+                .ToListAsync();
+
+            var orderDtos = readyDeliveryOrders.Select(o => MapToOrderDto(o)).ToList();
+
+            return Ok(orderDtos);
         }
     }
 }

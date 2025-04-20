@@ -39,44 +39,61 @@ namespace RMSProjectAPI.Controllers
             _signInManager = signInManager;
         }
 
-        // ✅ Register API
         [HttpPost("Register")]
-        public async Task<ActionResult> Register(UserDto userDto)
+        public async Task<ActionResult<UserResponseDto>> Register(UserDto userDto)
         {
             var existingUser = await _userManager.FindByEmailAsync(userDto.Email);
-            if (existingUser == null)
-            {
-                var user = new User
-                {
-                    Email = userDto.Email,
-                    UserName = userDto.Email,
-                    FirstName = userDto.FirstName,
-                    LastName = userDto.LastName,
-                    BirthDate = userDto.BirthDate,
-                    Gender = userDto.Gender,
-                    Country = userDto.Country,
-                    City = userDto.City,
-                    Street = userDto.Street,
-                    Status = userDto.Status,
-                    Role = userDto.Role
-                };
-                var result = await _userManager.CreateAsync(user, userDto.Password);
-
-                if (!result.Succeeded)
-                {
-                    return BadRequest(result.Errors);
-                }
-                await _userManager.AddToRoleAsync(user, "admin");
-            }
-            else
+            if (existingUser != null)
             {
                 return BadRequest("User already exists");
             }
 
-            return Ok(userDto);
+            var user = new User
+            {
+                Email = userDto.Email,
+                UserName = userDto.Email,
+                FirstName = userDto.FirstName,
+                LastName = userDto.LastName,
+                BirthDate = userDto.BirthDate,
+                Gender = userDto.Gender,
+                Country = userDto.Country,
+                City = userDto.City,
+                Street = userDto.Street,
+                Status = userDto.Status,
+                ImagePath = userDto.ImagePath,
+            };
+
+            var result = await _userManager.CreateAsync(user, userDto.Password);
+            if (!result.Succeeded)
+            {
+                return BadRequest(result.Errors);
+            }
+
+            await _userManager.AddToRoleAsync(user, "customer");
+
+            var roles = await _userManager.GetRolesAsync(user);
+            var token = await GenerateJwtToken(user);
+            var response = new UserResponseDto
+            {
+                Id = user.Id,
+                Email = user.Email,
+                UserName = user.UserName,
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                BirthDate = user.BirthDate,
+                Gender = user.Gender,
+                Country = user.Country,
+                City = user.City,
+                Street = user.Street,
+                Status = user.Status,
+                ImagePath = user.ImagePath,
+                Token = token,
+                Roles = roles.ToList()
+            };
+
+            return Ok(response);
         }
 
-        // ✅ Login API
         [HttpPost("Login")]
         public async Task<IActionResult> Login([FromBody] LoginDto model)
         {
@@ -92,8 +109,27 @@ namespace RMSProjectAPI.Controllers
                 return Unauthorized("Invalid credentials.");
             }
 
+            var roles = await _userManager.GetRolesAsync(user); // 👈 Get Roles
             var token = await GenerateJwtToken(user);
-            return Ok(new { token });
+            var response = new UserResponseDto
+            {
+                Id = user.Id,
+                Email = user.Email,
+                UserName = user.UserName,
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                BirthDate = user.BirthDate,
+                Gender = user.Gender,
+                Country = user.Country,
+                City = user.City,
+                Street = user.Street,
+                Status = user.Status,
+                ImagePath = user.ImagePath,
+                Token = token,
+                Roles = roles.ToList()
+            };
+
+            return Ok(response);
         }
 
         // ✅ Add Role API
@@ -221,52 +257,6 @@ namespace RMSProjectAPI.Controllers
             return Ok("User deleted successfully.");
         }
 
-        // ✅ Change Password
-        [HttpPost("ChangePassword")]
-        [Authorize]
-        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordDto model)
-        {
-            var user = await _userManager.FindByEmailAsync(model.Email);
-            if (user == null)
-            {
-                return NotFound("User not found.");
-            }
-
-            var result = await _userManager.ChangePasswordAsync(user, model.OldPassword, model.NewPassword);
-            if (!result.Succeeded)
-            {
-                return BadRequest(result.Errors);
-            }
-
-            return Ok("Password changed successfully.");
-        }
-
-        // New
-        // ✅ Change Password
-        [HttpPost("forgot-password")]
-        //public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordDto model)
-        public async Task<IActionResult> ForgotPassword()
-        {
-            //if (!ModelState.IsValid)
-            //    return BadRequest(ModelState);
-
-            //var user = await _userManager.FindByEmailAsync(model.Email);
-            //if (user == null)
-            //    return Ok(new { message = "If the email exists, a reset link was sent." });
-
-            //var token = await _userManager.GeneratePasswordResetTokenAsync(user);
-            //var encodedToken = WebUtility.UrlEncode(token);
-
-            //var resetUrl = $"{_config["FrontendBaseUrl"]}/reset-password?email={user.Email}&token={encodedToken}";
-
-            //await _emailSender.SendEmailAsync(user.Email, "Password Reset",
-            //    $"Reset your password by clicking <a href='{resetUrl}'>here</a>.");
-
-            //MailService.SendEmail();
-
-            return Ok(new { message = "If the email exists, a reset link was sent." });
-        }
-
         [HttpPost("reset-password")]
         public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordDto model)
         {
@@ -286,8 +276,6 @@ namespace RMSProjectAPI.Controllers
 
             return Ok(new { message = "Password has been reset successfully." });
         }
-
-        // New
 
         // ✅ Assign role to user
         [HttpPost("AssignRole")]

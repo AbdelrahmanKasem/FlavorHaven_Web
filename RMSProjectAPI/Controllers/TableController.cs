@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using RMSProjectAPI.Database;
 using RMSProjectAPI.Database.Entity;
+using RMSProjectAPI.DTOs;
 using RMSProjectAPI.Model;
 using System.Threading.Tasks;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
@@ -103,30 +104,98 @@ public class TableController : ControllerBase
         return File(table.QrCodeImage, "image/png", $"QRCode_{tableId}.png");
     }
 
-    // =======================================================================
-    // ✅ Create Booking
-    [HttpPost("Create")]
-    public async Task<IActionResult> CreateBooking([FromBody] BookTableDto bookingDto)
+    [HttpGet("TableStatus")]
+    public async Task<ActionResult<object>> GetTablesWithStatus()
     {
-        if (bookingDto.GuestCount <= 0)
+        var now = DateTime.Now;
+
+        var tables = await _context.Tables
+            .Include(t => t.Bookings)
+            .ToListAsync();
+
+        int occupiedCount = 0;
+        List<TableStatusDto> tableStatusList = new();
+
+        foreach (var table in tables)
         {
-            return BadRequest(new { Message = "Invalid guest count" });
+            string status = "Not Booked";
+
+            foreach (var booking in table.Bookings)
+            {
+                var start = booking.Date.Date + booking.Time;
+                var end = start + booking.Duration;
+
+                if (now >= start && now < end)
+                {
+                    status = "Booked (customers are on the table)";
+                    occupiedCount++;
+                    break;
+                }
+                else if (now < start)
+                {
+                    status = "Booked (booking time hasn't arrived)";
+                }
+            }
+
+            tableStatusList.Add(new TableStatusDto
+            {
+                TableId = table.Id,
+                TableNumber = table.TableNumber,
+                Capacity = table.Capacity,
+                Status = status
+            });
         }
 
-        var booking = new Booking
+        return Ok(new
         {
-            Id = Guid.NewGuid(),
-            Date = bookingDto.Date,
-            Time = bookingDto.Time,
-            GuestCount = bookingDto.GuestCount,
-            Status = BookingStatus.Pending,
-            CustomerId = bookingDto.CustomerId,
-            TableId = bookingDto.TableId,
-        };
+            TotalTables = tables.Count,
+            OccupiedTables = occupiedCount,
+            Tables = tableStatusList
+        });
+    }
 
-        _context.Bookings.Add(booking);
-        await _context.SaveChangesAsync();
+    // ======================= Waiter Orders =============================
+    [HttpGet("ReadyOrderForTables")]
+    public async Task<ActionResult<IEnumerable<OrderDto>>> GetAllReadyOrdersFromTables()
+    {
+        var readyOrders = await _context.Orders
+            .Include(o => o.OrderItems)
+                .ThenInclude(oi => oi.MenuItem)
+            .Include(o => o.OrderItems)
+                .ThenInclude(oi => oi.MenuItemSize)
+            .Where(o => o.TableId != null && o.Status == OrderStatus.Ready)
+            .ToListAsync();
 
-        return Ok(new { Message = "Booking created successfully", BookingId = booking.Id });
+        var orderDtos = readyOrders.Select(order => new OrderDto
+        {
+            Id = order.Id,
+            OrderDate = order.OrderDate,
+            Status = order.Status,
+            Type = order.Type,
+            Price = order.Price,
+            Latitude = order.Latitude,
+            Longitude = order.Longitude,
+            Address = order.Address,
+            PaymentSystem = order.PaymentSystem,
+            TransactionId = order.TransactionId,
+            Note = order.Note,
+            CustomerId = order.CustomerId,
+            TableId = order.TableId,
+            EstimatedPreparationTime = order.EstimatedPreparationTime,
+            OrderItems = order.OrderItems.Select(oi => new OrderItemDto
+            {
+                Id = oi.Id,
+                Quantity = oi.Quantity,
+                Note = oi.Note,
+                SpicyLevel = oi.SpicyLevel,
+                Price = oi.Price,
+                MenuItemId = oi.MenuItemId,
+                MenuItemName = oi.MenuItem.Name,
+                MenuItemSizeId = oi.MenuItemSizeId,
+                MenuItemSizePrice = oi.MenuItemSize.Price
+            }).ToList()
+        }).ToList();
+
+        return Ok(orderDtos);
     }
 }

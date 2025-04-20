@@ -18,8 +18,8 @@ namespace RMSProjectAPI.Model
         public string FirstName { get; set; }
        
         public string? Status { get; set; }
+        public string? ImagePath { get; set; }
         public string? Region { get; set; }
-        public string? Role { get; set; }
 
         public DateOnly CreatedAt { get; set; }
         public string Password { get; set; }

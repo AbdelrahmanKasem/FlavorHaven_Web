@@ -153,53 +153,5 @@ namespace RMSProjectAPI.Controllers
 
             return Ok(offerDtos);
         }
-
-        //[HttpPost("AddOfferToCart")]
-        //public async Task<ActionResult<CartDto>> AddOfferToCart(Guid userId, Guid offerId)
-        //{
-        //    var cart = await _context.Carts.Include(c => c.Items)
-        //        .FirstOrDefaultAsync(c => c.UserId == userId && !c.IsCheckedOut);
-
-        //    if (cart == null)
-        //    {
-        //        cart = new Cart { Id = Guid.NewGuid(), UserId = userId };
-        //        _context.Carts.Add(cart);
-        //    }
-
-        //    var offer = await _context.Offers
-        //        .Include(o => o.MenuItem)
-        //        .FirstOrDefaultAsync(o => o.Id == offerId && o.IsActive);
-
-        //    if (offer == null)
-        //        return NotFound("Offer not found or inactive.");
-
-        //    var currentDate = DateTime.Now;
-        //    if (offer.StartDate > currentDate || offer.EndDate < currentDate)
-        //        return BadRequest("Offer is not available at this time.");
-
-        //    var cartItem = cart.Items.FirstOrDefault(i => i.MenuItemId == offer.MenuItemId && i.PriceAtTimeOfOrder == offer.Price);
-
-        //    // Set quantity to 1 by default
-        //    if (cartItem != null)
-        //    {
-        //        cartItem.Quantity += 1; // Always add 1 if the item is already in the cart
-        //    }
-        //    else
-        //    {
-        //        cart.Items.Add(new CartItem
-        //        {
-        //            Id = Guid.NewGuid(),
-        //            CartId = cart.Id,
-        //            MenuItemId = offer.MenuItemId,
-        //            Quantity = 1, // Set quantity to 1 by default
-        //            PriceAtTimeOfOrder = offer.Price
-        //        });
-        //    }
-
-        //    await _context.SaveChangesAsync();
-
-        //    return Ok("Offer added to cart.");
-        //}
-
     }
 }

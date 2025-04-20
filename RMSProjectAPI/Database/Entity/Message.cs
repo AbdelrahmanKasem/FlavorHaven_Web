@@ -12,6 +12,7 @@ namespace RMSProjectAPI.Database.Entity
         public Guid ChatID { get; set; }
 
         [Required]
+        [ForeignKey(nameof(Sender))]
         public Guid SenderID { get; set; }
 
         [Required]
@@ -21,7 +22,8 @@ namespace RMSProjectAPI.Database.Entity
 
         public bool IsRead { get; set; } = false;
 
-        // Navigation property
+        public virtual User Sender { get; set; }
+
         public Chat Chat { get; set; }
     }
 }

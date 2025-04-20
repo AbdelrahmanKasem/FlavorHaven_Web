@@ -1,4 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Runtime.Intrinsics.X86;
 
 namespace RMSProjectAPI.Database.Entity
 {
@@ -8,14 +10,18 @@ namespace RMSProjectAPI.Database.Entity
         public Guid ChatID { get; set; }
 
         [Required]
-        public Guid User1ID { get; set; } // First participant
+        [ForeignKey(nameof(User1))]
+        public Guid User1ID { get; set; }
 
         [Required]
-        public Guid User2ID { get; set; } // Second participant
+        [ForeignKey(nameof(User2))]
+        public Guid User2ID { get; set; }
 
         public DateTime CreatedAt { get; set; } = DateTime.Now;
 
-        // Navigation property for messages
+        public virtual User User1 { get; set; }
+        public virtual User User2 { get; set; }
+
         public ICollection<Message> Messages { get; set; }
     }
 }

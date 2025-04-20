@@ -15,8 +15,8 @@ namespace RMSProjectAPI.Database.Entity
         public TimeSpan Duration { get; set; }
 
         // Rating system
-        public int TotalRating { get; set; } = 0; // Sum of all ratings
-        public int RatingCount { get; set; } = 0; // Number of ratings received
+        public int TotalRating { get; set; } = 0;
+        public int RatingCount { get; set; } = 0;
 
         [NotMapped]
         public double AverageRating => RatingCount > 0 ? (double)TotalRating / RatingCount : 0;

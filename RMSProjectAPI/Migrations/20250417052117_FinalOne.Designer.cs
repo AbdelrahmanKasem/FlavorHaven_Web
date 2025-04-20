@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using RMSProjectAPI.Database;
 
@@ -11,9 +12,11 @@ using RMSProjectAPI.Database;
 namespace RMSProjectAPI.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250417052117_FinalOne")]
+    partial class FinalOne
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -165,9 +168,6 @@ namespace RMSProjectAPI.Migrations
                     b.Property<DateTime>("Date")
                         .HasColumnType("datetime2");
 
-                    b.Property<TimeSpan>("Duration")
-                        .HasColumnType("time");
-
                     b.Property<int>("GuestCount")
                         .HasColumnType("int");
 
@@ -179,9 +179,6 @@ namespace RMSProjectAPI.Migrations
 
                     b.Property<TimeSpan>("Time")
                         .HasColumnType("time");
-
-                    b.Property<string>("TransactionId")
-                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
@@ -559,9 +556,6 @@ namespace RMSProjectAPI.Migrations
                     b.Property<Guid>("CustomerId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid?>("DeliveryId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<TimeSpan>("EstimatedPreparationTime")
                         .HasColumnType("time");
 
@@ -597,23 +591,11 @@ namespace RMSProjectAPI.Migrations
                     b.Property<int>("Type")
                         .HasColumnType("int");
 
-                    b.Property<Guid?>("UserId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid?>("WaiterId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.HasKey("Id");
 
                     b.HasIndex("CustomerId");
 
-                    b.HasIndex("DeliveryId");
-
                     b.HasIndex("TableId");
-
-                    b.HasIndex("UserId");
-
-                    b.HasIndex("WaiterId");
 
                     b.ToTable("Orders");
                 });
@@ -774,9 +756,6 @@ namespace RMSProjectAPI.Migrations
                     b.Property<string>("QrCodeUrl")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("TableNumber")
-                        .HasColumnType("int");
-
                     b.HasKey("Id");
 
                     b.ToTable("Tables");
@@ -848,6 +827,9 @@ namespace RMSProjectAPI.Migrations
 
                     b.Property<bool>("PhoneNumberConfirmed")
                         .HasColumnType("bit");
+
+                    b.Property<string>("Role")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("nvarchar(max)");
@@ -1093,38 +1075,19 @@ namespace RMSProjectAPI.Migrations
             modelBuilder.Entity("RMSProjectAPI.Database.Entity.Order", b =>
                 {
                     b.HasOne("RMSProjectAPI.Database.Entity.User", "Customer")
-                        .WithMany()
+                        .WithMany("Orders")
                         .HasForeignKey("CustomerId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
-
-                    b.HasOne("RMSProjectAPI.Database.Entity.User", "DeliveryPerson")
-                        .WithMany()
-                        .HasForeignKey("DeliveryId")
-                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("RMSProjectAPI.Database.Entity.Table", "Table")
                         .WithMany()
                         .HasForeignKey("TableId")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.HasOne("RMSProjectAPI.Database.Entity.User", null)
-                        .WithMany("Orders")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("RMSProjectAPI.Database.Entity.User", "Waiter")
-                        .WithMany()
-                        .HasForeignKey("WaiterId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
                     b.Navigation("Customer");
 
-                    b.Navigation("DeliveryPerson");
-
                     b.Navigation("Table");
-
-                    b.Navigation("Waiter");
                 });
 
             modelBuilder.Entity("RMSProjectAPI.Database.Entity.OrderItem", b =>

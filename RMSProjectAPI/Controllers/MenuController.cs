@@ -6,7 +6,6 @@ using RMSProjectAPI.Model;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
-using RMSProjectAPI.Database;
 
 namespace RMSProjectAPI.Controllers
 {
@@ -39,7 +38,10 @@ namespace RMSProjectAPI.Controllers
                             mi.Name,
                             mi.Description,
                             mi.ImagePath,
-                            mi.Price
+                            mi.Price,
+                            mi.RatingCount,
+                            mi.TotalRating,
+                            mi.AverageRating
                         })
                         .ToList()
                 })
@@ -204,7 +206,6 @@ namespace RMSProjectAPI.Controllers
                 ImagePath = menuItemDto.ImagePath,
                 Price = menuItemDto.Price,
                 Duration = menuItemDto.Duration,
-                //Offers = menuItemDto.Offers,
                 CategoryId = menuItemDto.CategoryId
             };
 
@@ -258,15 +259,23 @@ namespace RMSProjectAPI.Controllers
             return Ok(menuItems);
         }
 
-        // ✅ Get MenuItem by ID
+        // ✅ Get MenuItem by ID with related entities
         [HttpGet("GetMenuItem/{id}")]
         public async Task<IActionResult> GetMenuItemById(Guid id)
         {
-            var menuItem = await _context.MenuItems.FindAsync(id);
+            var menuItem = await _context.MenuItems
+                .Include(m => m.Category)
+                .Include(m => m.Extras)
+                .Include(m => m.Sizes)
+                .Include(m => m.Suggestions)
+                .FirstOrDefaultAsync(m => m.Id == id);
+
             if (menuItem == null)
                 return NotFound();
+
             return Ok(menuItem);
         }
+
 
         // ✅ Update MenuItem
         [HttpPut("UpdateMenuItem/{id}")]
@@ -455,15 +464,7 @@ namespace RMSProjectAPI.Controllers
         }
 
         // Get all sizes for a specific menu item
-        [HttpGet("GetMenuItemSizes/{menuItemId}")]
-        public async Task<IActionResult> GetMenuItemSizesByMenuItemId(Guid menuItemId)
-        {
-            var sizes = await _context.MenuItemSizes
-                .Where(s => s.MenuItemId == menuItemId)
-                .ToListAsync();
-
-            return Ok(sizes);
-        }
+        
 
         // Get a specific size by its ID
         [HttpGet("GetMenuItemSize/{id}")]
@@ -512,7 +513,7 @@ namespace RMSProjectAPI.Controllers
 
         // =============================== Suggestions =====================================
         [HttpPost("{menuItemId}/suggestions")]
-        public async Task<IActionResult> AddSuggestion(Guid menuItemId, [FromBody] AddSuggestionDTO dto)
+        public async Task<IActionResult> AddSuggestion(Guid menuItemId, [FromBody] AddSuggestionDto dto)
         {
             if (!await _context.MenuItems.AnyAsync(m => m.Id == menuItemId) ||
                 !await _context.MenuItems.AnyAsync(m => m.Id == dto.SuggestedItemId))
@@ -563,7 +564,10 @@ namespace RMSProjectAPI.Controllers
                     Id = s.SuggestedItem.Id,
                     Name = s.SuggestedItem.Name,
                     Price = s.SuggestedItem.Price,
-                    ImageUrl = s.SuggestedItem.ImagePath
+                    ImageUrl = s.SuggestedItem.ImagePath,
+                    RatingCount = s.SuggestedItem.RatingCount,
+                    TotalRating = s.SuggestedItem.TotalRating,
+                    Descritpion = s.SuggestedItem.Description
                 }).ToListAsync();
 
             return Ok(suggestions);
@@ -585,7 +589,9 @@ namespace RMSProjectAPI.Controllers
                     mi.Description,
                     mi.ImagePath,
                     mi.Price,
-                    mi.Duration
+                    mi.Duration,
+                    mi.RatingCount,
+                    mi.TotalRating,
                 })
                 .ToListAsync();
 
@@ -625,5 +631,34 @@ namespace RMSProjectAPI.Controllers
 
             return Ok(topItems);
         }
+
+        [HttpPost("Rate")]
+        public async Task<IActionResult> RateMenuItem([FromBody] MenuItemRatingDto dto)
+        {
+            if (dto.Rating < 1 || dto.Rating > 5)
+                return BadRequest("Rating must be between 1 and 5");
+
+            var menuItem = await _context.MenuItems.FindAsync(dto.MenuItemId);
+            if (menuItem == null)
+                return NotFound("Menu item not found");
+
+            // Update rating stats
+            menuItem.TotalRating += dto.Rating;
+            menuItem.RatingCount += 1;
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new
+            {
+                menuItem.Id,
+                menuItem.Name,
+                menuItem.TotalRating,
+                menuItem.RatingCount,
+                AverageRating = menuItem.RatingCount > 0
+                    ? (double)menuItem.TotalRating / menuItem.RatingCount
+                    : 0
+            });
+        }
+
     }
 }

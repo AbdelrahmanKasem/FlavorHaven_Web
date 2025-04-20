@@ -22,7 +22,7 @@ namespace RMSProjectAPI.Database.Entity
 
         public int Quantity { get; set; }
 
-        public decimal PriceAtTimeOfOrder { get; set; } // Store historical price
+        public decimal PriceAtTimeOfOrder { get; set; }
 
         [NotMapped]
         public decimal TotalPrice => PriceAtTimeOfOrder * Quantity;
