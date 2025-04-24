@@ -41,7 +41,6 @@ namespace RMSProjectAPI.Controllers
                 Address = createOrderDto.Address,
                 PaymentSystem = createOrderDto.PaymentSystem,
                 TransactionId = createOrderDto.TransactionId,
-                DeliveryFee = (decimal)createOrderDto.DeliveryFee,
                 Note = createOrderDto.Note,
                 CustomerId = createOrderDto.CustomerId,
                 DeliveryId = createOrderDto.DeliveryId,
@@ -52,19 +51,32 @@ namespace RMSProjectAPI.Controllers
 
             decimal totalPrice = 0;
             TimeSpan totalTime = TimeSpan.Zero;
+
             foreach (var itemDto in createOrderDto.OrderItems)
             {
                 var menuItem = await _context.MenuItems
                     .Include(mi => mi.Sizes)
+                    .Include(mi => mi.Extras)
+                    .Include(mi => mi.Offers)
                     .FirstOrDefaultAsync(mi => mi.Id == itemDto.MenuItemId);
 
                 if (menuItem == null)
                     return BadRequest($"MenuItem with ID {itemDto.MenuItemId} not found");
 
                 var menuItemSize = menuItem.Sizes.FirstOrDefault(ms => ms.Id == itemDto.MenuItemSizeId);
-                totalTime += menuItem.Duration;
                 if (menuItemSize == null)
                     return BadRequest($"MenuItemSize with ID {itemDto.MenuItemSizeId} not found for MenuItem with ID {itemDto.MenuItemId}");
+
+                totalTime += menuItem.Duration;
+
+                var now = DateTime.UtcNow;
+                var activeOffer = menuItem.Offers.FirstOrDefault(o =>
+                    o.IsActive &&
+                    o.StartDate <= now &&
+                    o.EndDate >= now
+                );
+
+                var basePrice = activeOffer != null ? activeOffer.Price : menuItemSize.Price;
 
                 var orderItem = new OrderItem
                 {
@@ -72,16 +84,40 @@ namespace RMSProjectAPI.Controllers
                     Quantity = itemDto.Quantity,
                     Note = itemDto.Note,
                     SpicyLevel = itemDto.SpicyLevel,
-                    Price = menuItemSize.Price * itemDto.Quantity,
+                    Price = basePrice * itemDto.Quantity,
                     MenuItemId = menuItem.Id,
-                    MenuItemSizeId = menuItemSize.Id 
+                    MenuItemSizeId = menuItemSize.Id,
+                    OrderItemExtras = new List<OrderItemExtra>()
                 };
+
+                if (itemDto.ExtraIds != null && itemDto.ExtraIds.Count > 0)
+                {
+                    var extras = menuItem.Extras.Where(e => itemDto.ExtraIds.Contains(e.Id)).ToList();
+
+                    foreach (var extra in extras)
+                    {
+                        orderItem.OrderItemExtras.Add(new OrderItemExtra
+                        {
+                            Id = Guid.NewGuid(),
+                            ExtraId = extra.Id,
+                            Price = extra.Price
+                        });
+
+                        orderItem.Price += extra.Price * itemDto.Quantity;
+                    }
+                }
 
                 totalPrice += orderItem.Price;
                 order.OrderItems.Add(orderItem);
             }
 
-            order.Price = totalPrice + (decimal)(createOrderDto.DeliveryFee ?? 0);
+            if (orderType == OrderType.Delivery)
+            {
+                order.DeliveryFee = (decimal)(createOrderDto.DeliveryFee ?? 0);
+                totalPrice += order.DeliveryFee;
+            }
+
+            order.Price = totalPrice;
             order.EstimatedPreparationTime = totalTime;
 
             _context.Orders.Add(order);
@@ -90,7 +126,6 @@ namespace RMSProjectAPI.Controllers
             var orderDto = MapToOrderDto(order);
             orderDto.EstimatedPreparationTime = totalTime;
 
-            // SignalR
             await _hubContext.Clients.All.SendAsync("ReceiveNewOrder", orderDto);
 
             return CreatedAtAction(nameof(GetOrder), new { id = order.Id }, orderDto);

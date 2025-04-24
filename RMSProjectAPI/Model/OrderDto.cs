@@ -56,13 +56,11 @@ namespace RMSProjectAPI.DTOs
         public string? Note { get; set; }
         public SpicyLevel SpicyLevel { get; set; }
         public decimal Price { get; set; }
-        
 
         public Guid MenuItemId { get; set; }
         public string MenuItemName { get; set; }
 
         public Guid MenuItemSizeId { get; set; }
-        public string MenuItemSizeName { get; set; }
         public decimal MenuItemSizePrice { get; set; }
     }
 
@@ -73,5 +71,15 @@ namespace RMSProjectAPI.DTOs
         public SpicyLevel SpicyLevel { get; set; }
         public Guid MenuItemId { get; set; }
         public Guid MenuItemSizeId { get; set; }
+
+        public List<Guid> ExtraIds { get; set; }
+    }
+
+    public class OrderTimeDto
+    {
+        public Guid OrderId { get; set; }
+        public DateTime OrderDate { get; set; }
+        public TimeSpan EstimatedPreparationTime { get; set; }
+        public DateTime ExpectedReadyTime => OrderDate + EstimatedPreparationTime;
     }
 }

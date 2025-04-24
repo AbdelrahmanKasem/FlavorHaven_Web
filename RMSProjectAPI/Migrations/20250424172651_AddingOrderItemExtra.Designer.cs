@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using RMSProjectAPI.Database;
 
@@ -11,9 +12,11 @@ using RMSProjectAPI.Database;
 namespace RMSProjectAPI.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250424172651_AddingOrderItemExtra")]
+    partial class AddingOrderItemExtra
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -647,6 +650,32 @@ namespace RMSProjectAPI.Migrations
                     b.ToTable("PhoneNumbers");
                 });
 
+            modelBuilder.Entity("RMSProjectAPI.Database.Entity.Table", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Capacity")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsAvailable")
+                        .HasColumnType("bit");
+
+                    b.Property<byte[]>("QrCodeImage")
+                        .HasColumnType("varbinary(max)");
+
+                    b.Property<string>("QrCodeUrl")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("TableNumber")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Tables");
+                });
+
             modelBuilder.Entity("RMSProjectAPI.Database.Entity.User", b =>
                 {
                     b.Property<Guid>("Id")
@@ -743,35 +772,6 @@ namespace RMSProjectAPI.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
-            modelBuilder.Entity("Table", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<int>("Capacity")
-                        .HasColumnType("int");
-
-                    b.Property<bool>("IsAvailable")
-                        .HasColumnType("bit");
-
-                    b.Property<byte[]>("QrCodeImage")
-                        .HasColumnType("varbinary(max)");
-
-                    b.Property<string>("QrCodeUrl")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("TableNumber")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("TableNumber")
-                        .IsUnique();
-
-                    b.ToTable("Tables");
-                });
-
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<System.Guid>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole<System.Guid>", null)
@@ -831,7 +831,7 @@ namespace RMSProjectAPI.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("Table", "Table")
+                    b.HasOne("RMSProjectAPI.Database.Entity.Table", "Table")
                         .WithMany("Bookings")
                         .HasForeignKey("TableId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -938,7 +938,7 @@ namespace RMSProjectAPI.Migrations
             modelBuilder.Entity("RMSProjectAPI.Database.Entity.Offer", b =>
                 {
                     b.HasOne("RMSProjectAPI.Database.Entity.MenuItem", "MenuItem")
-                        .WithMany("Offers")
+                        .WithMany()
                         .HasForeignKey("MenuItemId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
@@ -959,7 +959,7 @@ namespace RMSProjectAPI.Migrations
                         .HasForeignKey("DeliveryId")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.HasOne("Table", "Table")
+                    b.HasOne("RMSProjectAPI.Database.Entity.Table", "Table")
                         .WithMany()
                         .HasForeignKey("TableId")
                         .OnDelete(DeleteBehavior.Restrict);
@@ -1060,8 +1060,6 @@ namespace RMSProjectAPI.Migrations
                 {
                     b.Navigation("Extras");
 
-                    b.Navigation("Offers");
-
                     b.Navigation("Sizes");
 
                     b.Navigation("Suggestions");
@@ -1077,14 +1075,14 @@ namespace RMSProjectAPI.Migrations
                     b.Navigation("OrderItemExtras");
                 });
 
+            modelBuilder.Entity("RMSProjectAPI.Database.Entity.Table", b =>
+                {
+                    b.Navigation("Bookings");
+                });
+
             modelBuilder.Entity("RMSProjectAPI.Database.Entity.User", b =>
                 {
                     b.Navigation("Orders");
-                });
-
-            modelBuilder.Entity("Table", b =>
-                {
-                    b.Navigation("Bookings");
                 });
 #pragma warning restore 612, 618
         }

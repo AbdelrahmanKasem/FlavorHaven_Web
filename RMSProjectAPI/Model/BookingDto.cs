@@ -25,4 +25,9 @@ namespace RMSProjectAPI.Model
         public Guid CustomerId { get; set; }
         public Guid TableId { get; set; }
     }
+
+    public class CancelBookingDto
+    {
+        public Guid BookingId { get; set; }
+    }
 }

@@ -20,18 +20,40 @@ public class TableController : ControllerBase
         _tableRepository = tableRepository;
     }
 
-    // ✅ Add Table
-    [HttpPost("AddTable")]
-    public async Task<IActionResult> AddTable([FromBody] TableDto tableDto)
-    {
-        if (tableDto == null || tableDto.Capacity <= 0)
-        {
-            return BadRequest(new { Message = "Invalid table capacity" });
-        }
+    //// ✅ Add Table
+    //[HttpPost("AddTable")]
+    //public async Task<IActionResult> AddTable([FromBody] TableDto tableDto)
+    //{
+    //    if (tableDto == null || tableDto.Capacity <= 0)
+    //    {
+    //        return BadRequest(new { Message = "Invalid table capacity" });
+    //    }
 
-        await _tableRepository.AddTableAsync(tableDto.Capacity);
-        return Ok(new { Message = "Table added successfully" });
-    }
+    //    await _tableRepository.AddTableAsync(tableDto.Capacity);
+    //    return Ok(new { Message = "Table added successfully" });
+    //}
+
+    //public async Task AddTableAsync(int capacity)
+    //{
+    //    var lastTableNumber = await _context.Tables
+    //        .OrderByDescending(t => t.TableNumber)
+    //        .Select(t => t.TableNumber)
+    //        .FirstOrDefaultAsync();
+
+    //    var newTable = new Table
+    //    {
+    //        Id = Guid.NewGuid(),
+    //        TableNumber = lastTableNumber + 1,
+    //        Capacity = capacity,
+    //        IsAvailable = true,
+    //        QrCodeUrl = "", // Optional: generate based on table info
+    //        QrCodeImage = null
+    //    };
+
+    //    _context.Tables.Add(newTable);
+    //    await _context.SaveChangesAsync();
+    //}
+
 
     // ✅ Get All Tables
     [HttpGet("GetAll")]

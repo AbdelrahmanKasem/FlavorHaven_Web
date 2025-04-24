@@ -17,6 +17,8 @@ namespace RMSProjectAPI.Database.Entity
         public SpicyLevel SpicyLevel { get; set; }
         public decimal Price { get; set; }
 
+        public virtual List<OrderItemExtra> OrderItemExtras { get; set; } = new();
+
         [Required]
         public Guid MenuItemId { get; set; }
 

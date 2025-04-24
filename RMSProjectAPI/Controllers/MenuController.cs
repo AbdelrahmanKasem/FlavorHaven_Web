@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RMSProjectAPI.Database;
 using RMSProjectAPI.Database.Entity;
@@ -22,6 +23,7 @@ namespace RMSProjectAPI.Controllers
 
         // ✅ Create Category
         [HttpPost("CreateCategory")]
+        [Authorize(Roles = "admin")]
         public async Task<IActionResult> CreateCategory([FromBody] CategoryDto categoryDto)
         {
             if (categoryDto == null)
@@ -59,6 +61,7 @@ namespace RMSProjectAPI.Controllers
 
         // ✅ Update Category
         [HttpPut("UpdateCategory/{id}")]
+        [Authorize (Roles = "admin")]
         public async Task<IActionResult> UpdateCategory(Guid id, [FromBody] UpdateCategoryDto categoryDto)
         {
             var category = await _context.Categories.FindAsync(id);
@@ -73,6 +76,7 @@ namespace RMSProjectAPI.Controllers
 
         // ✅ Delete Category
         [HttpDelete("DeleteCategory/{id}")]
+        [Authorize(Roles = "admin")]
         public async Task<IActionResult> DeleteCategory(Guid id)
         {
             var category = await _context.Categories.FindAsync(id);
@@ -86,6 +90,7 @@ namespace RMSProjectAPI.Controllers
 
         // ✅ Create MenuItem
         [HttpPost("CreateMenuItem")]
+        [Authorize(Roles = "admin")]
         public async Task<IActionResult> CreateMenuItem([FromBody] MenuItemDto menuItemDto)
         {
             if (menuItemDto == null)
@@ -141,7 +146,6 @@ namespace RMSProjectAPI.Controllers
             return Ok(menuItems);
         }
 
-        // ✅ Get MenuItem by ID with related entities
         [HttpGet("GetMenuItem/{id}")]
         public async Task<IActionResult> GetMenuItemById(Guid id)
         {
@@ -158,9 +162,9 @@ namespace RMSProjectAPI.Controllers
             return Ok(menuItem);
         }
 
-
         // ✅ Update MenuItem
         [HttpPut("UpdateMenuItem/{id}")]
+        [Authorize(Roles = "admin")]
         public async Task<IActionResult> UpdateMenuItem(Guid id, [FromBody] UpdateMenuItemDto menuItemDto)
         {
             var menuItem = await _context.MenuItems.FindAsync(id);
@@ -179,6 +183,7 @@ namespace RMSProjectAPI.Controllers
 
         // ✅ Delete MenuItem
         [HttpDelete("DeleteMenuItem/{id}")]
+        [Authorize(Roles = "admin")]
         public async Task<IActionResult> DeleteMenuItem(Guid id)
         {
             var menuItem = await _context.MenuItems.FindAsync(id);
@@ -192,6 +197,7 @@ namespace RMSProjectAPI.Controllers
 
         // Create an Extra
         [HttpPost("CreateExtra")]
+        [Authorize(Roles = "admin")]
         public async Task<ActionResult<ExtraDto>> CreateExtra(ExtraDto extraDto)
         {
             if (extraDto == null)
@@ -219,6 +225,7 @@ namespace RMSProjectAPI.Controllers
 
         // Delete an Extra
         [HttpDelete("DeleteExtra/{id}")]
+        [Authorize(Roles = "admin")]
         public async Task<ActionResult> DeleteExtra(Guid id)
         {
             var extra = await _context.Extras.FindAsync(id);
@@ -234,6 +241,7 @@ namespace RMSProjectAPI.Controllers
 
         // Update an Extra
         [HttpPut("UpdateExtra/{id}")]
+        [Authorize(Roles = "admin")]
         public async Task<ActionResult<ExtraDto>> UpdateExtra(Guid id, UpdateExtraDto extraDto)
         {
             var extra = await _context.Extras.FindAsync(id);
@@ -316,6 +324,7 @@ namespace RMSProjectAPI.Controllers
         }
 
         [HttpPost("CreateMenuItemSize")]
+        //[Authorize(Roles = "admin")]
         public async Task<IActionResult> CreateMenuItemSize([FromBody] MenuItemSizeDto sizeDto)
         {
             if (sizeDto == null)
@@ -353,6 +362,7 @@ namespace RMSProjectAPI.Controllers
 
         // Update a size
         [HttpPut("UpdateMenuItemSize/{id}")]
+        [Authorize(Roles = "admin")]
         public async Task<IActionResult> UpdateMenuItemSize(Guid id, [FromBody] UpdateMenuItemSizeDto sizeDto)
         {
             var size = await _context.MenuItemSizes.FindAsync(id);
@@ -370,6 +380,7 @@ namespace RMSProjectAPI.Controllers
 
         // Delete a size
         [HttpDelete("DeleteMenuItemSize/{id}")]
+        [Authorize(Roles = "admin")]
         public async Task<IActionResult> DeleteMenuItemSize(Guid id)
         {
             var size = await _context.MenuItemSizes.FindAsync(id);
@@ -478,7 +489,7 @@ namespace RMSProjectAPI.Controllers
 
             var topItems = await _context.OrderItems
                 .Include(oi => oi.MenuItem)
-                .Include(oi => oi.Order) // Needed to filter by OrderDate
+                .Include(oi => oi.Order)
                 .Where(oi => oi.Order.OrderDate >= thirtyDaysAgo)
                 .GroupBy(oi => new
                 {
@@ -503,6 +514,7 @@ namespace RMSProjectAPI.Controllers
         }
 
         [HttpPost("Rate")]
+        [Authorize]
         public async Task<IActionResult> RateMenuItem([FromBody] MenuItemRatingDto dto)
         {
             if (dto.Rating < 1 || dto.Rating > 5)

@@ -10,13 +10,10 @@ namespace RMSProjectAPI.Database
         public DbSet<Booking> Bookings { get; set; }
         public DbSet<Category> Categories { get; set; }
         public DbSet<Chat> Chats { get; set; }
-        //public DbSet<Cart> Carts { get; set; }
-        //public DbSet<CartItem> CartItems { get; set; }
         public DbSet<Extra> Extras { get; set; }
         public DbSet<ContactForm> ContactForms { get; set; }
         public DbSet<FavoriteMeal> FavoriteMeals { get; set; }
         public DbSet<Location> Locations { get; set; }
-        //public DbSet<Menu> Menus { get; set; }
         public DbSet<MenuItem> MenuItems { get; set; }
         public DbSet<MenuItemSize> MenuItemSizes { get; set; }
         public DbSet<MenuItemSuggestion> MenuItemSuggestions { get; set; }
@@ -24,6 +21,7 @@ namespace RMSProjectAPI.Database
         public DbSet<Offer> Offers { get; set; }
         public DbSet<Order> Orders { get; set; }
         public DbSet<OrderItem> OrderItems { get; set; }
+        public DbSet<OrderItemExtra> OrderItemExtras { get; set; }
         public DbSet<OrderLog> OrderLogs { get; set; }
         //public DbSet<Payment> Payments { get; set; }
         public DbSet<PhoneNumber> PhoneNumbers { get; set; }
