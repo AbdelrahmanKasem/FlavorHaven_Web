@@ -154,7 +154,6 @@ public class TableController : ControllerBase
         });
     }
 
-    // ======================= Waiter Orders =============================
     [HttpGet("ReadyOrderForTables")]
     public async Task<ActionResult<IEnumerable<OrderDto>>> GetAllReadyOrdersFromTables()
     {

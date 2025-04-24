@@ -20,103 +20,6 @@ namespace RMSProjectAPI.Controllers
             _context = context;
         }
 
-        // ✅ Get all Categories with their Menu Items by Menu ID
-        [HttpGet("GetAllMenuItems/{menuId}")]
-        public async Task<IActionResult> GetCategoriesWithMenuItems(Guid menuId)
-        {
-            var categories = await _context.Categories
-                .Where(c => c.MenuId == menuId)
-                .Select(c => new
-                {
-                    c.Id,
-                    c.Name,
-                    Items = _context.MenuItems
-                        .Where(mi => mi.CategoryId == c.Id)
-                        .Select(mi => new
-                        {
-                            mi.Id,
-                            mi.Name,
-                            mi.Description,
-                            mi.ImagePath,
-                            mi.Price,
-                            mi.RatingCount,
-                            mi.TotalRating,
-                            mi.AverageRating
-                        })
-                        .ToList()
-                })
-                .ToListAsync();
-
-            if (categories == null || categories.Count == 0)
-                return NotFound("No categories or menu items found for this menu.");
-
-            return Ok(categories);
-        }
-
-        // ✅ Create Menu
-        [HttpPost("CreateMenu")]
-        public async Task<IActionResult> CreateMenu([FromBody] MenuDto menuDto)
-        {
-            if (menuDto == null)
-                return BadRequest("Invalid menu data.");
-
-            var menu = new Menu
-            {
-                Id = Guid.NewGuid(),
-                Offers = menuDto.Offers,
-            };
-
-            await _context.Menus.AddAsync(menu);
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction(nameof(GetMenuById), new { id = menu.Id }, menu);
-        }
-
-        // ✅ Get all Menus
-        [HttpGet("GetMenus")]
-        public async Task<IActionResult> GetAllMenus()
-        {
-            var menus = await _context.Menus.ToListAsync();
-            return Ok(menus);
-        }
-
-        // ✅ Get Menu by ID
-        [HttpGet("GetMenu/{id}")]
-        public async Task<IActionResult> GetMenuById(Guid id)
-        {
-            var menu = await _context.Menus.FindAsync(id);
-            if (menu == null)
-                return NotFound();
-            return Ok(menu);
-        }
-
-        // ✅ Update Menu
-        [HttpPut("UpdateMenu/{id}")]
-        public async Task<IActionResult> UpdateMenu(Guid id, [FromBody] MenuDto menuDto)
-        {
-            var menu = await _context.Menus.FindAsync(id);
-            if (menu == null)
-                return NotFound();
-
-            menu.Offers = menuDto.Offers;
-
-            await _context.SaveChangesAsync();
-            return NoContent();
-        }
-
-        // ✅ Delete Menu
-        [HttpDelete("DeleteMenu/{id}")]
-        public async Task<IActionResult> DeleteMenu(Guid id)
-        {
-            var menu = await _context.Menus.FindAsync(id);
-            if (menu == null)
-                return NotFound();
-
-            _context.Menus.Remove(menu);
-            await _context.SaveChangesAsync();
-            return NoContent();
-        }
-
         // ✅ Create Category
         [HttpPost("CreateCategory")]
         public async Task<IActionResult> CreateCategory([FromBody] CategoryDto categoryDto)
@@ -128,7 +31,6 @@ namespace RMSProjectAPI.Controllers
             {
                 Id = Guid.NewGuid(),
                 Name = categoryDto.Name,
-                MenuId = categoryDto.MenuId
             };
 
             await _context.Categories.AddAsync(category);
@@ -149,7 +51,7 @@ namespace RMSProjectAPI.Controllers
         [HttpGet("GetCategoriesByMenu/{menuId}")]
         public async Task<IActionResult> GetCategoriesByMenuId(Guid menuId)
         {
-            var categories = await _context.Categories.Where(c => c.MenuId == menuId).ToListAsync();
+            var categories = await _context.Categories.ToListAsync();
             return Ok(categories);
         }
 
@@ -172,7 +74,6 @@ namespace RMSProjectAPI.Controllers
                 return NotFound();
 
             category.Name = categoryDto.Name;
-            category.MenuId = categoryDto.MenuId;
 
             await _context.SaveChangesAsync();
             return NoContent();
@@ -248,17 +149,6 @@ namespace RMSProjectAPI.Controllers
             return Ok(menuItems);
         }
 
-        // ✅ Get MenuItems by Menu ID
-        [HttpGet("GetMenuItemsByMenu/{menuId}")]
-        public async Task<IActionResult> GetMenuItemsByMenuId(Guid menuId)
-        {
-            var menuItems = await _context.MenuItems
-                .Where(mi => _context.Categories.Any(c => c.Id == mi.CategoryId && c.MenuId == menuId))
-                .ToListAsync();
-
-            return Ok(menuItems);
-        }
-
         // ✅ Get MenuItem by ID with related entities
         [HttpGet("GetMenuItem/{id}")]
         public async Task<IActionResult> GetMenuItemById(Guid id)
@@ -308,7 +198,6 @@ namespace RMSProjectAPI.Controllers
             return NoContent();
         }
 
-        // ========================== Extra ================================
         // Create an Extra
         [HttpPost("CreateExtra")]
         public async Task<ActionResult<ExtraDto>> CreateExtra(ExtraDto extraDto)
@@ -332,7 +221,7 @@ namespace RMSProjectAPI.Controllers
             _context.Extras.Add(extra);
             await _context.SaveChangesAsync();
 
-            extraDto.Id = extra.Id; // Return the created Extra with Id
+            extraDto.Id = extra.Id;
             return CreatedAtAction(nameof(GetExtra), new { id = extraDto.Id }, extraDto);
         }
 
@@ -348,7 +237,7 @@ namespace RMSProjectAPI.Controllers
             _context.Extras.Remove(extra);
             await _context.SaveChangesAsync();
 
-            return NoContent(); // Successfully deleted
+            return NoContent();
         }
 
         // Update an Extra
@@ -369,7 +258,7 @@ namespace RMSProjectAPI.Controllers
 
             await _context.SaveChangesAsync();
 
-            return Ok(extraDto); // Return updated ExtraDto
+            return Ok(extraDto);
         }
 
         // Get all Extras
@@ -437,7 +326,6 @@ namespace RMSProjectAPI.Controllers
             return Ok(extras);
         }
 
-        // =========================== Sizes ===========================================
         [HttpPost("CreateMenuItemSize")]
         public async Task<IActionResult> CreateMenuItemSize([FromBody] MenuItemSizeDto sizeDto)
         {
@@ -461,10 +349,7 @@ namespace RMSProjectAPI.Controllers
 
             sizeDto.Id = menuItemSize.Id;
             return CreatedAtAction(nameof(GetMenuItemSizeById), new { id = sizeDto.Id }, sizeDto);
-        }
-
-        // Get all sizes for a specific menu item
-        
+        }     
 
         // Get a specific size by its ID
         [HttpGet("GetMenuItemSize/{id}")]
@@ -511,7 +396,6 @@ namespace RMSProjectAPI.Controllers
             return NoContent();
         }
 
-        // =============================== Suggestions =====================================
         [HttpPost("{menuItemId}/suggestions")]
         public async Task<IActionResult> AddSuggestion(Guid menuItemId, [FromBody] AddSuggestionDto dto)
         {
@@ -659,6 +543,5 @@ namespace RMSProjectAPI.Controllers
                     : 0
             });
         }
-
     }
 }

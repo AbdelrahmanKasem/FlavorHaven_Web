@@ -12,7 +12,6 @@ namespace RMSProjectAPI.Database.Entity
         public Guid ChatID { get; set; }
 
         [Required]
-        [ForeignKey(nameof(Sender))]
         public Guid SenderID { get; set; }
 
         [Required]
@@ -21,8 +20,6 @@ namespace RMSProjectAPI.Database.Entity
         public DateTime SentAt { get; set; } = DateTime.Now;
 
         public bool IsRead { get; set; } = false;
-
-        public virtual User Sender { get; set; }
 
         public Chat Chat { get; set; }
     }

@@ -192,71 +192,10 @@ namespace RMSProjectAPI.Migrations
                     b.ToTable("Bookings");
                 });
 
-            modelBuilder.Entity("RMSProjectAPI.Database.Entity.Cart", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<bool>("IsCheckedOut")
-                        .HasColumnType("bit");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Carts");
-                });
-
-            modelBuilder.Entity("RMSProjectAPI.Database.Entity.CartItem", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("CartId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("MenuItemDescription")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<Guid>("MenuItemId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("MenuItemImage")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("MenuItemName")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<Guid>("MenuItemSizeId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<decimal>("PriceAtTimeOfOrder")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<int>("Quantity")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CartId");
-
-                    b.HasIndex("MenuItemId");
-
-                    b.HasIndex("MenuItemSizeId");
-
-                    b.ToTable("CartItems");
-                });
-
             modelBuilder.Entity("RMSProjectAPI.Database.Entity.Category", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("MenuId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Name")
@@ -265,8 +204,6 @@ namespace RMSProjectAPI.Migrations
                         .HasColumnType("nvarchar(100)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("MenuId");
 
                     b.ToTable("Categories");
                 });
@@ -383,20 +320,6 @@ namespace RMSProjectAPI.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("Locations");
-                });
-
-            modelBuilder.Entity("RMSProjectAPI.Database.Entity.Menu", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<decimal?>("Offers")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Menus");
                 });
 
             modelBuilder.Entity("RMSProjectAPI.Database.Entity.MenuItem", b =>
@@ -559,6 +482,9 @@ namespace RMSProjectAPI.Migrations
                     b.Property<Guid>("CustomerId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<decimal>("DeliveryFee")
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<Guid?>("DeliveryId")
                         .HasColumnType("uniqueidentifier");
 
@@ -678,34 +604,6 @@ namespace RMSProjectAPI.Migrations
                     b.ToTable("OrderLogs");
                 });
 
-            modelBuilder.Entity("RMSProjectAPI.Database.Entity.Payment", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<decimal>("Amount")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<Guid>("OrderId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("PaymentDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("PaymentMethod")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("OrderId");
-
-                    b.ToTable("Payments");
-                });
-
             modelBuilder.Entity("RMSProjectAPI.Database.Entity.PhoneNumber", b =>
                 {
                     b.Property<Guid>("Id")
@@ -723,37 +621,6 @@ namespace RMSProjectAPI.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("PhoneNumbers");
-                });
-
-            modelBuilder.Entity("RMSProjectAPI.Database.Entity.Supplier", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("City")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Country")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Email")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Name")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Street")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<Guid>("SupervisorId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("SupervisorId");
-
-                    b.ToTable("Suppliers");
                 });
 
             modelBuilder.Entity("RMSProjectAPI.Database.Entity.Table", b =>
@@ -948,44 +815,6 @@ namespace RMSProjectAPI.Migrations
                     b.Navigation("Table");
                 });
 
-            modelBuilder.Entity("RMSProjectAPI.Database.Entity.CartItem", b =>
-                {
-                    b.HasOne("RMSProjectAPI.Database.Entity.Cart", "Cart")
-                        .WithMany("Items")
-                        .HasForeignKey("CartId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("RMSProjectAPI.Database.Entity.MenuItem", "MenuItem")
-                        .WithMany()
-                        .HasForeignKey("MenuItemId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("RMSProjectAPI.Database.Entity.MenuItemSize", "MenuItemSize")
-                        .WithMany()
-                        .HasForeignKey("MenuItemSizeId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Cart");
-
-                    b.Navigation("MenuItem");
-
-                    b.Navigation("MenuItemSize");
-                });
-
-            modelBuilder.Entity("RMSProjectAPI.Database.Entity.Category", b =>
-                {
-                    b.HasOne("RMSProjectAPI.Database.Entity.Menu", "Menu")
-                        .WithMany("Categories")
-                        .HasForeignKey("MenuId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Menu");
-                });
-
             modelBuilder.Entity("RMSProjectAPI.Database.Entity.Extra", b =>
                 {
                     b.HasOne("RMSProjectAPI.Database.Entity.MenuItem", "MenuItem")
@@ -1165,17 +994,6 @@ namespace RMSProjectAPI.Migrations
                     b.Navigation("Order");
                 });
 
-            modelBuilder.Entity("RMSProjectAPI.Database.Entity.Payment", b =>
-                {
-                    b.HasOne("RMSProjectAPI.Database.Entity.Order", "Order")
-                        .WithMany()
-                        .HasForeignKey("OrderId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Order");
-                });
-
             modelBuilder.Entity("RMSProjectAPI.Database.Entity.PhoneNumber", b =>
                 {
                     b.HasOne("RMSProjectAPI.Database.Entity.User", "User")
@@ -1187,30 +1005,9 @@ namespace RMSProjectAPI.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("RMSProjectAPI.Database.Entity.Supplier", b =>
-                {
-                    b.HasOne("RMSProjectAPI.Database.Entity.User", "Supervisor")
-                        .WithMany()
-                        .HasForeignKey("SupervisorId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Supervisor");
-                });
-
-            modelBuilder.Entity("RMSProjectAPI.Database.Entity.Cart", b =>
-                {
-                    b.Navigation("Items");
-                });
-
             modelBuilder.Entity("RMSProjectAPI.Database.Entity.Chat", b =>
                 {
                     b.Navigation("Messages");
-                });
-
-            modelBuilder.Entity("RMSProjectAPI.Database.Entity.Menu", b =>
-                {
-                    b.Navigation("Categories");
                 });
 
             modelBuilder.Entity("RMSProjectAPI.Database.Entity.MenuItem", b =>

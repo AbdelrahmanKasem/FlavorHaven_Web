@@ -5,7 +5,7 @@
 namespace RMSProjectAPI.Migrations
 {
     /// <inheritdoc />
-    public partial class OrderT : Migration
+    public partial class ReadyToUpload : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

@@ -6,6 +6,8 @@ using RMSProjectAPI.Database;
 using RMSProjectAPI.Database.Entity;
 using System.Text;
 using RMSProjectAPI.Hubs;
+using Microsoft.OpenApi.Models;
+using RMSProjectAPI.Services;
 
 namespace RMSProjectAPI
 {
@@ -28,9 +30,17 @@ namespace RMSProjectAPI
             builder.Services.AddScoped<TableRepository>();
             builder.Services.AddSingleton<QRCodeService>();
             builder.Services.AddSignalR();
+            builder.Services.AddScoped<IPhoneNumberService, PhoneNumberService>();
 
 
             // Add services to the container.
+            //builder.Services.AddIdentity<User, IdentityRole<Guid>>(options =>
+            //{
+            //    options.SignIn.RequireConfirmedEmail = true;
+            //})
+            //         .AddEntityFrameworkStores<AppDbContext>()
+            //         .AddDefaultTokenProviders();
+
             builder.Services.AddIdentity<User, IdentityRole<Guid>>()
                      .AddEntityFrameworkStores<AppDbContext>()
                      .AddDefaultTokenProviders();
@@ -73,14 +83,31 @@ namespace RMSProjectAPI
 
             builder.Services.AddControllers();
             builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen();
+            builder.Services.AddSwaggerGen(c =>
+            {
+                c.SwaggerDoc("v1", new OpenApiInfo
+                {
+                    Title = "RMSProjectAPI",
+                    Version = "v1",
+                    Description = "An example of an ASP.NET Core Web API",
+                    Contact = new OpenApiContact
+                    {
+                        Name = "Example Contact",
+                        Email = "abdulrahmanmamdouh789@gmail.com",
+                        Url = new Uri("http://flavorhaven.runasp.net/contact"),
+                    }
+                });
+            });
 
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
 
             app.UseSwagger();
-            app.UseSwaggerUI();
+            app.UseSwaggerUI(options =>
+            {
+                options.SwaggerEndpoint("/swagger/v1/swagger.json", "v1");
+            });
 
             app.UseHttpsRedirection();
 

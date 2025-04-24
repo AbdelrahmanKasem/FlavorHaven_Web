@@ -17,7 +17,7 @@ namespace RMSProjectAPI.Controllers
             _context = context;
         }
 
-        // Create a new offer
+        // ✅ Tested
         [HttpPost("Create")]
         public async Task<ActionResult<OfferDto>> CreateOffer([FromBody] OfferDto offerDto)
         {
@@ -37,11 +37,11 @@ namespace RMSProjectAPI.Controllers
             _context.Offers.Add(offer);
             await _context.SaveChangesAsync();
 
-            offerDto.Id = offer.Id;  // Set the created offer's Id in the DTO
+            offerDto.Id = offer.Id;
             return Ok(offerDto);
         }
 
-        // Delete an offer
+        // ✅ Tested
         [HttpDelete("Delete/{id}")]
         public async Task<ActionResult> DeleteOffer(Guid id)
         {
@@ -55,7 +55,7 @@ namespace RMSProjectAPI.Controllers
             return Ok("Offer deleted.");
         }
 
-        // Update an existing offer
+        // ✅ Tested
         [HttpPut("Update/{id}")]
         public async Task<ActionResult> UpdateOffer(Guid id, [FromBody] OfferDto offerDto)
         {
@@ -77,12 +77,12 @@ namespace RMSProjectAPI.Controllers
             return Ok("Offer updated.");
         }
 
-        // Get a specific offer by ID
+        // ✅ Tested
         [HttpGet("GetOffer/{id}")]
         public async Task<ActionResult<OfferDto>> GetOffer(Guid id)
         {
             var offer = await _context.Offers
-                .Include(o => o.MenuItem)  // Optionally, include the MenuItem data
+                .Include(o => o.MenuItem)
                 .FirstOrDefaultAsync(o => o.Id == id);
 
             if (offer == null)
@@ -104,7 +104,7 @@ namespace RMSProjectAPI.Controllers
             return Ok(offerDto);
         }
 
-        // Get all offers
+        // ✅ Tested
         [HttpGet("GetAllOffers")]
         public async Task<ActionResult<IEnumerable<OfferDto>>> GetAllOffers()
         {
@@ -128,7 +128,7 @@ namespace RMSProjectAPI.Controllers
             return Ok(offerDtos);
         }
 
-        // Get available offers based on start and end time
+        // ✅ Tested
         [HttpGet("GetAvailableOffers")]
         public async Task<ActionResult<IEnumerable<OfferDto>>> GetAvailableOffers()
         {

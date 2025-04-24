@@ -164,7 +164,7 @@ namespace RMSProjectAPI.Controllers
             // SignalR - notify clients about the updated order status
             await _hubContext.Clients.All.SendAsync("OrderStatusUpdated", orderDto);
 
-            return Ok(orderDto); // Return full order DTO including EstimatedPreparationTime
+            return Ok(orderDto);
         }
 
         [HttpDelete("DeleteOrder/{id}")]
@@ -269,7 +269,6 @@ namespace RMSProjectAPI.Controllers
             return Ok(dto);
         }
 
-        // ============== For Delivery ======================
         [HttpGet("GetReadyDeliveryOrders")]
         public async Task<ActionResult<List<OrderDto>>> GetReadyDeliveryOrders()
         {

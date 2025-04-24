@@ -12,8 +12,8 @@ using RMSProjectAPI.Database;
 namespace RMSProjectAPI.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250420141201_EditOrders")]
-    partial class EditOrders
+    [Migration("20250421085713_test")]
+    partial class test
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -561,6 +561,9 @@ namespace RMSProjectAPI.Migrations
 
                     b.Property<Guid>("CustomerId")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("DeliveryFee")
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<Guid?>("DeliveryId")
                         .HasColumnType("uniqueidentifier");

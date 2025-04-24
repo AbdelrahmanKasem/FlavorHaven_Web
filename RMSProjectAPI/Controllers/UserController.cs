@@ -1,17 +1,15 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using RMSProjectAPI.Database;
 using RMSProjectAPI.Database.Entity;
 using RMSProjectAPI.Model;
-using RMSProjectAPI.Services;
 using System.IdentityModel.Tokens.Jwt;
 using System.Net;
 using System.Security.Claims;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace RMSProjectAPI.Controllers
 {
@@ -24,6 +22,7 @@ namespace RMSProjectAPI.Controllers
         private readonly UserManager<User> _userManager;
         private readonly RoleManager<IdentityRole<Guid>> _roleManager;
         private readonly SignInManager<User> _signInManager;
+
 
         public UserController(
             IConfiguration configuration,
@@ -39,6 +38,7 @@ namespace RMSProjectAPI.Controllers
             _signInManager = signInManager;
         }
 
+         //✅ Tested
         [HttpPost("Register")]
         public async Task<ActionResult<UserResponseDto>> Register(UserDto userDto)
         {
@@ -94,6 +94,86 @@ namespace RMSProjectAPI.Controllers
             return Ok(response);
         }
 
+        //[HttpPost("Register")]
+        //public async Task<ActionResult<UserResponseDto>> Register(UserDto userDto)
+        //{
+        //    var existingUser = await _userManager.FindByEmailAsync(userDto.Email);
+        //    if (existingUser != null)
+        //    {
+        //        return BadRequest("User already exists");
+        //    }
+
+        //    var user = new User
+        //    {
+        //        Email = userDto.Email,
+        //        UserName = userDto.Email,
+        //        FirstName = userDto.FirstName,
+        //        LastName = userDto.LastName,
+        //        BirthDate = userDto.BirthDate,
+        //        Gender = userDto.Gender,
+        //        Country = userDto.Country,
+        //        City = userDto.City,
+        //        Street = userDto.Street,
+        //        Status = userDto.Status,
+        //        ImagePath = userDto.ImagePath,
+        //        CreatedAt = DateOnly.FromDateTime(DateTime.UtcNow)
+        //    };
+
+        //    var createResult = await _userManager.CreateAsync(user, userDto.Password);
+        //    if (!createResult.Succeeded)
+        //    {
+        //        return BadRequest(createResult.Errors);
+        //    }
+
+        //    await _userManager.AddToRoleAsync(user, "customer");
+
+        //    // Generate email confirmation token
+        //    var emailToken = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+        //    var encodedToken = WebUtility.UrlEncode(emailToken);
+        //    var confirmationLink = $"https://flavorhaven.runasp.net/api/auth/confirmemail?userId={user.Id}&token={encodedToken}";
+
+        //    // Send confirmation email
+        //    MailService.SendEmail(user.Email, "Confirm your email", $"Click here to confirm your email: {confirmationLink}");
+
+        //    // Generate JWT token
+        //    var jwtToken = await GenerateJwtToken(user);
+
+        //    var roles = await _userManager.GetRolesAsync(user);
+        //    var response = new UserResponseDto
+        //    {
+        //        Id = user.Id,
+        //        Email = user.Email,
+        //        UserName = user.UserName,
+        //        FirstName = user.FirstName,
+        //        LastName = user.LastName,
+        //        BirthDate = user.BirthDate,
+        //        Gender = user.Gender,
+        //        Country = user.Country,
+        //        City = user.City,
+        //        Street = user.Street,
+        //        Status = user.Status,
+        //        ImagePath = user.ImagePath,
+        //        Token = jwtToken,
+        //        Roles = roles.ToList()
+        //    };
+
+        //    return Ok(response);
+        //}
+
+        [HttpGet("ConfirmEmail")]
+        public async Task<IActionResult> ConfirmEmail(Guid userId, string token)
+        {
+            var user = await _userManager.FindByIdAsync(userId.ToString());
+            if (user == null)
+                return BadRequest("Invalid user ID");
+
+            var result = await _userManager.ConfirmEmailAsync(user, token);
+            if (result.Succeeded)
+                return Ok("Email confirmed successfully!");
+
+            return BadRequest("Email confirmation failed");
+        }
+
         [HttpPost("Login")]
         public async Task<IActionResult> Login([FromBody] LoginDto model)
         {
@@ -109,7 +189,7 @@ namespace RMSProjectAPI.Controllers
                 return Unauthorized("Invalid credentials.");
             }
 
-            var roles = await _userManager.GetRolesAsync(user); // 👈 Get Roles
+            var roles = await _userManager.GetRolesAsync(user);
             var token = await GenerateJwtToken(user);
             var response = new UserResponseDto
             {
@@ -132,9 +212,8 @@ namespace RMSProjectAPI.Controllers
             return Ok(response);
         }
 
-        // ✅ Add Role API
         [HttpPost("AddRole")]
-        //[Authorize(Roles = "admin")]
+        [Authorize(Roles = "admin")]
         public async Task<IActionResult> AddRole([FromBody] string roleName)
         {
             if (string.IsNullOrWhiteSpace(roleName))
@@ -157,15 +236,21 @@ namespace RMSProjectAPI.Controllers
             return BadRequest("Failed to create role.");
         }
 
-        // ✅ Get All Users
+        [HttpGet("GetRoles")]
+        [Authorize(Roles = "admin")]
+        public ActionResult<IEnumerable<string>> GetRoles()
+        {
+            var roles = _roleManager.Roles.Select(r => r.Name).ToList();
+            return Ok(roles);
+        }
+
         [HttpGet("GetUsers")]
-        //[Authorize]
+        [Authorize(Roles = "admin")]
         public ActionResult GetAllUsers()
         {
             return Ok(_appDbContext.Users);
         }
 
-        // ✅ JWT Token Generator
         private async Task<string> GenerateJwtToken(User user)
         {
             var roles = await _userManager.GetRolesAsync(user);
@@ -195,7 +280,6 @@ namespace RMSProjectAPI.Controllers
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
 
-        // ✅ Get User by ID
         [HttpGet("GetUser/{id}")]
         [Authorize]
         public async Task<IActionResult> GetUserById(string id)
@@ -208,7 +292,6 @@ namespace RMSProjectAPI.Controllers
             return Ok(user);
         }
 
-        // ✅ Update User Information
         [HttpPut("UpdateUser/{id}")]
         [Authorize]
         public async Task<IActionResult> UpdateUser(string id, [FromBody] UserDto updatedUser)
@@ -237,7 +320,6 @@ namespace RMSProjectAPI.Controllers
             return Ok("User updated successfully.");
         }
 
-        // ✅ Delete User
         [HttpDelete("DeleteUser/{id}")]
         [Authorize(Roles = "admin")]
         public async Task<IActionResult> DeleteUser(string id)
@@ -248,6 +330,18 @@ namespace RMSProjectAPI.Controllers
                 return NotFound("User not found.");
             }
 
+            // Remove user from all roles
+            var roles = await _userManager.GetRolesAsync(user);
+            if (roles.Any())
+            {
+                var roleResult = await _userManager.RemoveFromRolesAsync(user, roles);
+                if (!roleResult.Succeeded)
+                {
+                    return BadRequest(roleResult.Errors);
+                }
+            }
+
+            // Now delete the user
             var result = await _userManager.DeleteAsync(user);
             if (!result.Succeeded)
             {
@@ -257,29 +351,65 @@ namespace RMSProjectAPI.Controllers
             return Ok("User deleted successfully.");
         }
 
-        [HttpPost("reset-password")]
-        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordDto model)
+
+        [HttpPost("ChangePassword")]
+        [Authorize]
+        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordDto model)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (userId == null)
+                return Unauthorized("Can't find it's id");
 
-            var user = await _userManager.FindByEmailAsync(model.Email);
+            var user = await _userManager.FindByIdAsync(userId);
             if (user == null)
-                return BadRequest(new { message = "Invalid email." });
+                return NotFound("User not found.");
 
-            var decodedToken = WebUtility.UrlDecode(model.Token);
-
-            var result = await _userManager.ResetPasswordAsync(user, decodedToken, model.NewPassword);
-
+            var result = await _userManager.ChangePasswordAsync(user, model.OldPassword, model.NewPassword);
             if (!result.Succeeded)
                 return BadRequest(result.Errors);
 
-            return Ok(new { message = "Password has been reset successfully." });
+            return Ok("Password changed successfully.");
         }
 
-        // ✅ Assign role to user
+        [HttpPost("ForgotPassword")]
+        public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordDto model)
+        {
+            var user = await _userManager.FindByEmailAsync(model.Email);
+            if (user == null || !(await _userManager.IsEmailConfirmedAsync(user)))
+            {
+                return Ok("If your email is registered and confirmed, a password reset link has been sent.");
+            }
+
+            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+            var encodedToken = WebUtility.UrlEncode(token);
+
+            var resetLink = $"https://flavorhaven.runasp.net/reset-password?email={user.Email}&token={encodedToken}";
+
+            MailService.SendEmail(user.Email, "Reset Password", $"Click here to reset your password: {resetLink}");
+
+            return Ok("If your email is registered and confirmed, a password reset link has been sent.");
+        }
+
+        [HttpPost("ResetPassword")]
+        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordDto model)
+        {
+            var user = await _userManager.FindByEmailAsync(model.Email);
+            if (user == null)
+            {
+                return BadRequest("Invalid request.");
+            }
+
+            var result = await _userManager.ResetPasswordAsync(user, model.Token, model.NewPassword);
+            if (!result.Succeeded)
+            {
+                return BadRequest(result.Errors);
+            }
+
+            return Ok("Password has been reset successfully.");
+        }
+
         [HttpPost("AssignRole")]
-        //[Authorize(Roles = "admin")]
+        [Authorize(Roles = "admin")]
         public async Task<IActionResult> AssignRole([FromBody] AssignRoleDto model)
         {
             var user = await _userManager.FindByEmailAsync(model.Email);
@@ -303,7 +433,6 @@ namespace RMSProjectAPI.Controllers
             return Ok($"Role '{model.Role}' assigned to {user.Email}.");
         }
 
-        // ✅ Refresh token
         [HttpPost("RefreshToken")]
         public async Task<IActionResult> RefreshToken([FromBody] TokenDto tokenDto)
         {
@@ -316,5 +445,13 @@ namespace RMSProjectAPI.Controllers
             var newToken = await GenerateJwtToken(user);
             return Ok(new { token = newToken });
         }
+
+        // ==== Testing Area ====
+        //[HttpGet]
+        //public ActionResult Get()
+        //{
+        //    MailService.SendEmail("abdulrahmanmamdouh789@gmail.com", "just to test the mail", "I'm Abdelrahman from flavor haven");
+        //    return Ok();
+        //}
     }
 }

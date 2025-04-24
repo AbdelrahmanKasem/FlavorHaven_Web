@@ -21,7 +21,7 @@ namespace RMSProjectAPI.Database.Entity
         public Guid MenuItemId { get; set; }
 
         [Required]
-        public Guid MenuItemSizeId { get; set; }  // Added MenuItemSizeId for the size
+        public Guid MenuItemSizeId { get; set; }
 
         [ForeignKey("MenuItemId")]
         public MenuItem MenuItem { get; set; }
