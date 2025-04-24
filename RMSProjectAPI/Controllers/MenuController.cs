@@ -47,14 +47,6 @@ namespace RMSProjectAPI.Controllers
             return Ok(categories);
         }
 
-        // ✅ Get all Categories by Menu ID
-        [HttpGet("GetCategoriesByMenu/{menuId}")]
-        public async Task<IActionResult> GetCategoriesByMenuId(Guid menuId)
-        {
-            var categories = await _context.Categories.ToListAsync();
-            return Ok(categories);
-        }
-
         // ✅ Get Category by ID
         [HttpGet("GetCategory/{id}")]
         public async Task<IActionResult> GetCategoryById(Guid id)
@@ -242,11 +234,8 @@ namespace RMSProjectAPI.Controllers
 
         // Update an Extra
         [HttpPut("UpdateExtra/{id}")]
-        public async Task<ActionResult<ExtraDto>> UpdateExtra(Guid id, ExtraDto extraDto)
+        public async Task<ActionResult<ExtraDto>> UpdateExtra(Guid id, UpdateExtraDto extraDto)
         {
-            if (id != extraDto.Id)
-                return BadRequest("ID mismatch.");
-
             var extra = await _context.Extras.FindAsync(id);
             if (extra == null)
                 return NotFound("Extra not found.");
@@ -364,11 +353,8 @@ namespace RMSProjectAPI.Controllers
 
         // Update a size
         [HttpPut("UpdateMenuItemSize/{id}")]
-        public async Task<IActionResult> UpdateMenuItemSize(Guid id, [FromBody] MenuItemSizeDto sizeDto)
+        public async Task<IActionResult> UpdateMenuItemSize(Guid id, [FromBody] UpdateMenuItemSizeDto sizeDto)
         {
-            if (id != sizeDto.Id)
-                return BadRequest("ID mismatch.");
-
             var size = await _context.MenuItemSizes.FindAsync(id);
             if (size == null)
                 return NotFound("Size not found.");
