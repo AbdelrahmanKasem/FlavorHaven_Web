@@ -22,7 +22,6 @@ namespace RMSProjectAPI.Controllers
         {
             _context = context;
             _hubContext = hubContext;
-
         }
 
         [HttpPost("CreateOrder")]
@@ -333,11 +332,26 @@ namespace RMSProjectAPI.Controllers
             });
         }
 
+        //[HttpGet("GetReadyDeliveryOrders")]
+        //public async Task<ActionResult<List<OrderDto>>> GetReadyDeliveryOrders()
+        //{
+        //    var readyDeliveryOrders = await _context.Orders
+        //        .Where(o => o.Status == OrderStatus.Ready && o.Type == OrderType.Delivery)
+        //        .Include(o => o.OrderItems)
+        //        .ToListAsync();
+
+        //    var orderDtos = readyDeliveryOrders.Select(o => MapToOrderDto(o)).ToList();
+
+        //    return Ok(orderDtos);
+        //}
+
         [HttpGet("GetReadyDeliveryOrders")]
         public async Task<ActionResult<List<OrderDto>>> GetReadyDeliveryOrders()
         {
             var readyDeliveryOrders = await _context.Orders
-                .Where(o => o.Status == OrderStatus.Ready && o.Type == OrderType.Delivery)
+                .Where(o => o.Status == OrderStatus.Ready
+                            && o.Type == OrderType.Delivery
+                            && o.DeliveryId == null)
                 .Include(o => o.OrderItems)
                 .ToListAsync();
 

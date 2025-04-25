@@ -1,8 +1,10 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using RMSProjectAPI.Database;
 using RMSProjectAPI.Database.Entity;
 using RMSProjectAPI.DTOs;
+using RMSProjectAPI.Hubs;
 using RMSProjectAPI.Model;
 using System.Threading.Tasks;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
@@ -30,6 +32,7 @@ public class TableController : ControllerBase
         }
 
         await _tableRepository.AddTableAsync(tableDto.Capacity);
+
         return Ok(new { Message = "Table added successfully" });
     }
 

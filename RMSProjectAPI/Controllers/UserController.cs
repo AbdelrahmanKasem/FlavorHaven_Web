@@ -400,7 +400,7 @@ namespace RMSProjectAPI.Controllers
         }
 
         [HttpPost("AssignRole")]
-        [Authorize(Roles = "admin")]
+        //[Authorize(Roles = "admin")]
         public async Task<IActionResult> AssignRole([FromBody] AssignRoleDto model)
         {
             var user = await _userManager.FindByEmailAsync(model.Email);

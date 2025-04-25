@@ -85,4 +85,17 @@ namespace RMSProjectAPI.DTOs
         public TimeSpan EstimatedPreparationTime { get; set; }
         public DateTime ExpectedReadyTime => OrderDate + EstimatedPreparationTime;
     }
+
+    public class OrderHistoryDto
+    {
+        public Guid OrderId { get; set; }
+        public DateTime OrderDate { get; set; }
+        public OrderStatus Status { get; set; }
+        public decimal DeliveryFee { get; set; }
+        public string Address { get; set; }
+
+        public Guid CustomerId { get; set; }
+        public string CustomerName { get; set; }
+        public string CustomerImage { get; set; }
+    }
 }

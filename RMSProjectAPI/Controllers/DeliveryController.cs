@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RMSProjectAPI.Database;
 using RMSProjectAPI.Database.Entity;
@@ -28,11 +29,6 @@ namespace RMSProjectAPI.Controllers
             if (user == null)
                 return NotFound("Delivery person not found");
 
-            //var phoneNumber = await _context.Set<PhoneNumber>()
-            //    .Where(p => p.UserId == deliveryId)
-            //    .Select(p => p.Number)
-            //    .FirstOrDefaultAsync();
-
             var orders = await _context.Orders
                 .Where(o => o.DeliveryId == deliveryId)
                 .ToListAsync();
@@ -45,13 +41,13 @@ namespace RMSProjectAPI.Controllers
 
             var monthlyRevenue = completedOrders
                 .Where(o => o.OrderDate.Month == currentMonth && o.OrderDate.Year == currentYear)
-                .Sum(o => o.Price + o.DeliveryFee);
+                .Sum(o => o.DeliveryFee);
 
             var response = new DeliveryDto
             {
                 FullName = $"{user.FirstName} {user.LastName}",
                 ImagePath = user.ImagePath,
-                //PhoneNumber = phoneNumber ?? "Not Available",
+                PhoneNumber = user.PhoneNumber ?? "Not Available",
                 MonthlyRevenue = monthlyRevenue,
                 CompletedOrders = completedOrders.Count,
                 CancelledOrders = cancelledOrders.Count
@@ -61,6 +57,7 @@ namespace RMSProjectAPI.Controllers
         }
 
         [HttpPost("AssignOrder/{orderId}")]
+        [Authorize(Roles = "delivery")]
         public async Task<IActionResult> AssignOrder(Guid orderId)
         {
             var userId = User?.Claims.FirstOrDefault(c => c.Type == "uid")?.Value;
@@ -79,9 +76,8 @@ namespace RMSProjectAPI.Controllers
                 return BadRequest("Order is not for delivery");
 
             if (order.DeliveryId != null)
-                return BadRequest("This order is already assigned to a delivery person");
+                return BadRequest("This order is already assigned to another delivery person");
 
-            // Assign
             order.DeliveryId = deliveryId;
             order.Status = OrderStatus.InProgress;
 
@@ -89,5 +85,56 @@ namespace RMSProjectAPI.Controllers
 
             return Ok("Order assigned successfully");
         }
+
+        //[HttpGet("OrderHistory/{deliveryId}")]
+        //public async Task<IActionResult> GetOrderHistory(Guid deliveryId)
+        //{
+        //    var orders = await _context.Orders
+        //        .Where(o => o.DeliveryId == deliveryId)
+        //        .Include(o => o.Customer)
+        //        .ToListAsync();
+
+        //    if (!orders.Any())
+        //        return NotFound("No orders found for this delivery person");
+
+        //    var orderHistory = orders.Select(o => new OrderHistoryDto
+        //    {
+        //        OrderId = o.Id,
+        //        OrderDate = o.OrderDate,
+        //        Status = o.Status,
+        //        DeliveryFee = o.DeliveryFee,
+        //        Address = o.Address ?? "Not Provided"
+        //    }).ToList();
+
+        //    return Ok(orderHistory);
+        //}
+
+        [HttpGet("OrderHistory/{deliveryId}")]
+        public async Task<IActionResult> GetOrderHistory(Guid deliveryId)
+        {
+            var orders = await _context.Orders
+                .Where(o => o.DeliveryId == deliveryId)
+                .Include(o => o.Customer)
+                .ToListAsync();
+
+            if (!orders.Any())
+                return NotFound("No orders found for this delivery person");
+
+            var orderHistory = orders.Select(o => new OrderHistoryDto
+            {
+                OrderId = o.Id,
+                OrderDate = o.OrderDate,
+                Status = o.Status,
+                DeliveryFee = o.DeliveryFee,
+                Address = o.Address ?? "Not Provided",
+
+                CustomerId = o.CustomerId,
+                CustomerName = $"{o.Customer.FirstName} {o.Customer.LastName}",
+                CustomerImage = o.Customer.ImagePath ?? "DefaultImagePath"
+            }).ToList();
+
+            return Ok(orderHistory);
+        }
+
     }
 }
