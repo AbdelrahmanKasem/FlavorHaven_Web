@@ -28,6 +28,7 @@ namespace RMSProjectAPI.Database.Entity
         [ForeignKey(nameof(CustomerId))]
         public virtual User Customer { get; set; }
         public virtual ICollection<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
+        public virtual ICollection<OrderLog> OrderLogs { get; set; }
 
         // Waiter
         public Guid? WaiterId { get; set; }

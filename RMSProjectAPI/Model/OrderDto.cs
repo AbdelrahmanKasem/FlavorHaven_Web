@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion.Internal;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using RMSProjectAPI.Database.Entity;
+using RMSProjectAPI.Model;
 
 namespace RMSProjectAPI.DTOs
 {
@@ -62,6 +63,8 @@ namespace RMSProjectAPI.DTOs
 
         public Guid MenuItemSizeId { get; set; }
         public decimal MenuItemSizePrice { get; set; }
+
+        public List<OrderItemExtraDto> Extras { get; set; }  // Add Extras
     }
 
     public class CreateOrderItemDto

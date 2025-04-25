@@ -184,6 +184,30 @@ namespace RMSProjectAPI.Controllers
             return Ok(MapToOrderDto(order));
         }
 
+        [HttpGet("OrderItemExtras/{orderItemId}")]
+        public async Task<ActionResult<List<OrderItemExtraDto>>> GetOrderItemExtras(Guid orderItemId)
+        {
+            var orderItem = await _context.OrderItems
+                .Include(oi => oi.OrderItemExtras)
+                .ThenInclude(oiEx => oiEx.Extra)
+                .FirstOrDefaultAsync(oi => oi.Id == orderItemId);
+
+            if (orderItem == null)
+            {
+                return NotFound(new { Message = "Order item not found" });
+            }
+
+            var extrasDto = orderItem.OrderItemExtras.Select(oiEx => new OrderItemExtraDto
+            {
+                Id = oiEx.Id,
+                ExtraId = oiEx.ExtraId,
+                Price = oiEx.Price,
+                ImagePath = oiEx.Extra.ImagePath
+            }).ToList();
+
+            return Ok(extrasDto);
+        }
+
         [HttpPut("UpdateStatus/{id}")]
         public async Task<ActionResult<OrderDto>> UpdateOrderStatus(Guid id, UpdateOrderStatusDto dto)
         {
@@ -198,31 +222,24 @@ namespace RMSProjectAPI.Controllers
                 return BadRequest("Invalid status");
 
             order.Status = status;
+
+            var orderLog = new OrderLog
+            {
+                Id = Guid.NewGuid(),
+                OrderId = order.Id,
+                Status = status,
+                UpdatedAt = DateTime.UtcNow
+            };
+
+            _context.OrderLogs.Add(orderLog);
+
             await _context.SaveChangesAsync();
 
             var orderDto = MapToOrderDto(order);
 
-            // SignalR - notify clients about the updated order status
             await _hubContext.Clients.All.SendAsync("OrderStatusUpdated", orderDto);
 
             return Ok(orderDto);
-        }
-
-        [HttpDelete("DeleteOrder/{id}")]
-        public async Task<IActionResult> DeleteOrder(Guid id)
-        {
-            var order = await _context.Orders
-                .Include(o => o.OrderItems)
-                .FirstOrDefaultAsync(o => o.Id == id);
-
-            if (order == null)
-                return NotFound("Order not found");
-
-            _context.OrderItems.RemoveRange(order.OrderItems);
-            _context.Orders.Remove(order);
-
-            await _context.SaveChangesAsync();
-            return NoContent();
         }
 
         [HttpGet("CustomerOrders/{customerId}")]
