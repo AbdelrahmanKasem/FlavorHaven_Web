@@ -1,4 +1,6 @@
 ﻿using EllipticCurve.Utils;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization.Infrastructure;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
@@ -25,6 +27,7 @@ namespace RMSProjectAPI.Controllers
         }
 
         [HttpPost("CreateOrder")]
+        [Authorize]
         public async Task<ActionResult<OrderDto>> CreateOrder(CreateOrderDto createOrderDto)
         {
             if (!Enum.TryParse<OrderType>(createOrderDto.Type.ToString(), out var orderType))
@@ -137,6 +140,7 @@ namespace RMSProjectAPI.Controllers
         }
 
         [HttpGet("GetAllOrders")]
+        [Authorize(Roles = "admin")]
         public async Task<ActionResult<List<OrderDto>>> GetAllOrders()
         {
             var orders = await _context.Orders
@@ -148,6 +152,7 @@ namespace RMSProjectAPI.Controllers
         }
 
         [HttpGet("GetGroupedActiveOrders")]
+        [Authorize]
         public async Task<ActionResult<Dictionary<OrderStatus, List<OrderDto>>>> GetGroupedActiveOrders()
         {
             var today = DateTime.UtcNow.Date;
@@ -208,6 +213,7 @@ namespace RMSProjectAPI.Controllers
         }
 
         [HttpPut("UpdateStatus/{id}")]
+        [Authorize(Roles = "admin,chef")]
         public async Task<ActionResult<OrderDto>> UpdateOrderStatus(Guid id, UpdateOrderStatusDto dto)
         {
             var order = await _context.Orders
@@ -242,6 +248,7 @@ namespace RMSProjectAPI.Controllers
         }
 
         [HttpGet("CustomerOrders/{customerId}")]
+        [Authorize]
         public async Task<ActionResult<List<OrderDto>>> GetOrdersByCustomer(Guid customerId)
         {
             var orders = await _context.Orders
@@ -254,6 +261,7 @@ namespace RMSProjectAPI.Controllers
         }
 
         [HttpGet("FilterOrders")]
+        [Authorize]
         public async Task<ActionResult<List<OrderDto>>> FilterOrders([FromQuery] string? status, [FromQuery] DateTime? from, [FromQuery] DateTime? to)
         {
             var query = _context.Orders.Include(o => o.OrderItems).AsQueryable();
@@ -332,20 +340,8 @@ namespace RMSProjectAPI.Controllers
             });
         }
 
-        //[HttpGet("GetReadyDeliveryOrders")]
-        //public async Task<ActionResult<List<OrderDto>>> GetReadyDeliveryOrders()
-        //{
-        //    var readyDeliveryOrders = await _context.Orders
-        //        .Where(o => o.Status == OrderStatus.Ready && o.Type == OrderType.Delivery)
-        //        .Include(o => o.OrderItems)
-        //        .ToListAsync();
-
-        //    var orderDtos = readyDeliveryOrders.Select(o => MapToOrderDto(o)).ToList();
-
-        //    return Ok(orderDtos);
-        //}
-
         [HttpGet("GetReadyDeliveryOrders")]
+        [Authorize]
         public async Task<ActionResult<List<OrderDto>>> GetReadyDeliveryOrders()
         {
             var readyDeliveryOrders = await _context.Orders
@@ -361,6 +357,7 @@ namespace RMSProjectAPI.Controllers
         }
 
         [HttpGet("GetOrdersByDelivery/{deliveryId}")]
+        [Authorize]
         public async Task<ActionResult<List<OrderDto>>> GetOrdersByDelivery(Guid deliveryId)
         {
             var orders = await _context.Orders
@@ -373,8 +370,8 @@ namespace RMSProjectAPI.Controllers
             return Ok(orderDtos);
         }
 
-        // ====================== For Waiter ========================
         [HttpGet("GetReadyWaiterOrders")]
+        [Authorize]
         public async Task<ActionResult<List<OrderDto>>> GetReadyWaiterOrders()
         {
             var readyDeliveryOrders = await _context.Orders

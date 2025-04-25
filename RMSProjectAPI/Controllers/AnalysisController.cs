@@ -8,7 +8,7 @@ namespace RMSProjectAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    //[Authorize (Roles = "admin")]
+    [Authorize (Roles = "admin")]
     public class AnalysisController : ControllerBase
     {
         private readonly AppDbContext _context;

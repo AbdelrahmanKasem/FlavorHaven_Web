@@ -207,7 +207,7 @@ namespace RMSProjectAPI.Controllers
         }
 
         [HttpPost("AddRole")]
-        //[Authorize(Roles = "admin")]
+        [Authorize(Roles = "admin")]
         public async Task<IActionResult> AddRole([FromBody] string roleName)
         {
             if (string.IsNullOrWhiteSpace(roleName))
@@ -321,7 +321,6 @@ namespace RMSProjectAPI.Controllers
                 return NotFound("User not found.");
             }
 
-            // Remove user from all roles
             var roles = await _userManager.GetRolesAsync(user);
             if (roles.Any())
             {
@@ -332,7 +331,6 @@ namespace RMSProjectAPI.Controllers
                 }
             }
 
-            // Now delete the user
             var result = await _userManager.DeleteAsync(user);
             if (!result.Succeeded)
             {
@@ -400,7 +398,7 @@ namespace RMSProjectAPI.Controllers
         }
 
         [HttpPost("AssignRole")]
-        //[Authorize(Roles = "admin")]
+        [Authorize(Roles = "admin")]
         public async Task<IActionResult> AssignRole([FromBody] AssignRoleDto model)
         {
             var user = await _userManager.FindByEmailAsync(model.Email);

@@ -19,6 +19,7 @@ namespace RMSProjectAPI.Controllers
         }
 
         [HttpGet("GetBookings")]
+        [Authorize]
         public async Task<ActionResult<IEnumerable<BookingDto>>> GetBookings()
         {
             return await _context.Bookings
@@ -37,6 +38,7 @@ namespace RMSProjectAPI.Controllers
         }
 
         [HttpGet("GetBooking/{id}")]
+        [Authorize]
         public async Task<ActionResult<BookingDto>> GetBooking(Guid id)
         {
             var booking = await _context.Bookings.FindAsync(id);
@@ -57,35 +59,30 @@ namespace RMSProjectAPI.Controllers
             };
         }
 
-        [Authorize]
         [HttpPost("CreateBooking")]
+        [Authorize]
         public async Task<ActionResult<BookingDto>> SmartCreateBooking(CreateBookingDto dto)
         {
-            // Calculate desired start and end times
             DateTime bookingStart = dto.Date.Date + dto.Time;
             DateTime bookingEnd = bookingStart + dto.Duration;
 
-            // Step 1: Get all tables that have capacity >= guest count
             var suitableTables = await _context.Tables
                 .Where(t => t.Capacity >= dto.GuestCount)
-                .OrderBy(t => t.Capacity) // Prefer smallest fitting table
+                .OrderBy(t => t.Capacity)
                 .Include(t => t.Bookings)
                 .ToListAsync();
 
-            // Step 2: Check availability for each suitable table
             foreach (var table in suitableTables)
             {
                 bool isAvailable = table.Bookings.All(b =>
                 {
                     var existingStart = b.Date.Date + b.Time;
                     var existingEnd = existingStart + b.Duration;
-                    // No overlap condition
                     return bookingEnd <= existingStart || bookingStart >= existingEnd;
                 });
 
                 if (isAvailable)
                 {
-                    // Step 3: Create the booking
                     var newBooking = new Booking
                     {
                         Id = Guid.NewGuid(),
