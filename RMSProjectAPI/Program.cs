@@ -7,7 +7,6 @@ using RMSProjectAPI.Database.Entity;
 using System.Text;
 using RMSProjectAPI.Hubs;
 using Microsoft.OpenApi.Models;
-using RMSProjectAPI.Services;
 
 namespace RMSProjectAPI
 {
@@ -30,8 +29,6 @@ namespace RMSProjectAPI
             builder.Services.AddScoped<TableRepository>();
             builder.Services.AddSingleton<QRCodeService>();
             builder.Services.AddSignalR();
-            builder.Services.AddScoped<IPhoneNumberService, PhoneNumberService>();
-
 
             // Add services to the container.
             //builder.Services.AddIdentity<User, IdentityRole<Guid>>(options =>

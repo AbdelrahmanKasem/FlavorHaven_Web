@@ -6,7 +6,6 @@ using System.ComponentModel.DataAnnotations;
 public class Table
 {
     public Guid Id { get; set; }
-
     [Required]
     public int TableNumber { get; set; }
 

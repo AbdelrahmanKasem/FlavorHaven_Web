@@ -150,5 +150,25 @@ namespace RMSProjectAPI.Controllers
             await _context.SaveChangesAsync();
             return NoContent();
         }
+
+        // PATCH: api/bookings/ChangeStatus/{id}
+        [HttpPatch("ChangeStatus/{id}")]
+        public async Task<IActionResult> ChangeBookingStatus(Guid id, [FromBody] UpdateBookingStatusDto dto)
+        {
+            var booking = await _context.Bookings.FindAsync(id);
+            if (booking == null)
+                return NotFound("Booking not found");
+
+            booking.Status = dto.Status;
+
+            await _context.SaveChangesAsync();
+            return Ok(new
+            {
+                Message = "Booking status updated successfully",
+                BookingId = booking.Id,
+                NewStatus = booking.Status.ToString()
+            });
+        }
+
     }
 }

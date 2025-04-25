@@ -18,7 +18,7 @@ namespace RMSProjectAPI.Controllers
         }
 
         // ✅ Tested
-        [HttpPost("Create")]
+        [HttpPost("CreateOffer")]
         public async Task<ActionResult<OfferDto>> CreateOffer([FromBody] OfferDto offerDto)
         {
             var offer = new Offer
@@ -42,7 +42,7 @@ namespace RMSProjectAPI.Controllers
         }
 
         // ✅ Tested
-        [HttpDelete("Delete/{id}")]
+        [HttpDelete("DeleteOffer/{id}")]
         public async Task<ActionResult> DeleteOffer(Guid id)
         {
             var offer = await _context.Offers.FindAsync(id);
@@ -56,7 +56,7 @@ namespace RMSProjectAPI.Controllers
         }
 
         // ✅ Tested
-        [HttpPut("Update/{id}")]
+        [HttpPut("UpdateOffer/{id}")]
         public async Task<ActionResult> UpdateOffer(Guid id, [FromBody] OfferDto offerDto)
         {
             var offer = await _context.Offers.FindAsync(id);
@@ -78,7 +78,7 @@ namespace RMSProjectAPI.Controllers
         }
 
         // ✅ Tested
-        [HttpGet("GetOffer/{id}")]
+        [HttpGet("GetOfferOffer/{id}")]
         public async Task<ActionResult<OfferDto>> GetOffer(Guid id)
         {
             var offer = await _context.Offers

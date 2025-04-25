@@ -30,4 +30,9 @@ namespace RMSProjectAPI.Model
     {
         public Guid BookingId { get; set; }
     }
+
+    public class UpdateBookingStatusDto
+    {
+        public BookingStatus Status { get; set; }
+    }
 }

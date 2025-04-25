@@ -28,10 +28,10 @@ namespace RMSProjectAPI.Controllers
             if (user == null)
                 return NotFound("Delivery person not found");
 
-            var phoneNumber = await _context.Set<PhoneNumber>()
-                .Where(p => p.UserId == deliveryId)
-                .Select(p => p.Number)
-                .FirstOrDefaultAsync();
+            //var phoneNumber = await _context.Set<PhoneNumber>()
+            //    .Where(p => p.UserId == deliveryId)
+            //    .Select(p => p.Number)
+            //    .FirstOrDefaultAsync();
 
             var orders = await _context.Orders
                 .Where(o => o.DeliveryId == deliveryId)
@@ -51,7 +51,7 @@ namespace RMSProjectAPI.Controllers
             {
                 FullName = $"{user.FirstName} {user.LastName}",
                 ImagePath = user.ImagePath,
-                PhoneNumber = phoneNumber ?? "Not Available",
+                //PhoneNumber = phoneNumber ?? "Not Available",
                 MonthlyRevenue = monthlyRevenue,
                 CompletedOrders = completedOrders.Count,
                 CancelledOrders = cancelledOrders.Count
@@ -63,7 +63,6 @@ namespace RMSProjectAPI.Controllers
         [HttpPost("AssignOrder/{orderId}")]
         public async Task<IActionResult> AssignOrder(Guid orderId)
         {
-            // Get the currently logged-in delivery user (assuming you're using JWT auth)
             var userId = User?.Claims.FirstOrDefault(c => c.Type == "uid")?.Value;
 
             if (string.IsNullOrEmpty(userId))

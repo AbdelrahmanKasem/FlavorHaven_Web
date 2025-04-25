@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace RMSProjectAPI.Migrations
 {
     /// <inheritdoc />
-    public partial class Init : Migration
+    public partial class Initial : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -40,9 +40,6 @@ namespace RMSProjectAPI.Migrations
                     CreatedAt = table.Column<DateOnly>(type: "date", nullable: false),
                     Status = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     ImagePath = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    IsEmailVerified = table.Column<bool>(type: "bit", nullable: false),
-                    EmailVerificationToken = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    EmailVerificationTokenExpiration = table.Column<DateTime>(type: "datetime2", nullable: true),
                     UserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     NormalizedUserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     Email = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
@@ -64,16 +61,15 @@ namespace RMSProjectAPI.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Carts",
+                name: "Categories",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    UserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    IsCheckedOut = table.Column<bool>(type: "bit", nullable: false)
+                    Name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Carts", x => x.Id);
+                    table.PrimaryKey("PK_Categories", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -105,18 +101,6 @@ namespace RMSProjectAPI.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_ContactForms", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Menus",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    Offers = table.Column<decimal>(type: "decimal(18,2)", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Menus", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -280,24 +264,26 @@ namespace RMSProjectAPI.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Suppliers",
+                name: "MenuItems",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    Name = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Email = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Country = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    City = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Street = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    SupervisorId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    ImagePath = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Price = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    Duration = table.Column<TimeSpan>(type: "time", nullable: false),
+                    TotalRating = table.Column<int>(type: "int", nullable: false),
+                    RatingCount = table.Column<int>(type: "int", nullable: false),
+                    CategoryId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Suppliers", x => x.Id);
+                    table.PrimaryKey("PK_MenuItems", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Suppliers_AspNetUsers_SupervisorId",
-                        column: x => x.SupervisorId,
-                        principalTable: "AspNetUsers",
+                        name: "FK_MenuItems_Categories_CategoryId",
+                        column: x => x.CategoryId,
+                        principalTable: "Categories",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
@@ -321,25 +307,6 @@ namespace RMSProjectAPI.Migrations
                         column: x => x.ChatID,
                         principalTable: "Chats",
                         principalColumn: "ChatID",
-                        onDelete: ReferentialAction.Restrict);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Categories",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    Name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    MenuId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Categories", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Categories_Menus_MenuId",
-                        column: x => x.MenuId,
-                        principalTable: "Menus",
-                        principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
 
@@ -428,73 +395,6 @@ namespace RMSProjectAPI.Migrations
                         name: "FK_Orders_Tables_TableId",
                         column: x => x.TableId,
                         principalTable: "Tables",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "MenuItems",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Description = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    ImagePath = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Price = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    Duration = table.Column<TimeSpan>(type: "time", nullable: false),
-                    TotalRating = table.Column<int>(type: "int", nullable: false),
-                    RatingCount = table.Column<int>(type: "int", nullable: false),
-                    CategoryId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_MenuItems", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_MenuItems_Categories_CategoryId",
-                        column: x => x.CategoryId,
-                        principalTable: "Categories",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "OrderLogs",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    OrderId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    Status = table.Column<int>(type: "int", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_OrderLogs", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_OrderLogs_Orders_OrderId",
-                        column: x => x.OrderId,
-                        principalTable: "Orders",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Payments",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    PaymentDate = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    Amount = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    PaymentMethod = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Status = table.Column<int>(type: "int", nullable: false),
-                    OrderId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Payments", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Payments_Orders_OrderId",
-                        column: x => x.OrderId,
-                        principalTable: "Orders",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
@@ -616,38 +516,21 @@ namespace RMSProjectAPI.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "CartItems",
+                name: "OrderLogs",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    CartId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    MenuItemId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    MenuItemSizeId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    MenuItemName = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    MenuItemImage = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    MenuItemDescription = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Quantity = table.Column<int>(type: "int", nullable: false),
-                    PriceAtTimeOfOrder = table.Column<decimal>(type: "decimal(18,2)", nullable: false)
+                    OrderId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Status = table.Column<int>(type: "int", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_CartItems", x => x.Id);
+                    table.PrimaryKey("PK_OrderLogs", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_CartItems_Carts_CartId",
-                        column: x => x.CartId,
-                        principalTable: "Carts",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_CartItems_MenuItemSizes_MenuItemSizeId",
-                        column: x => x.MenuItemSizeId,
-                        principalTable: "MenuItemSizes",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_CartItems_MenuItems_MenuItemId",
-                        column: x => x.MenuItemId,
-                        principalTable: "MenuItems",
+                        name: "FK_OrderLogs_Orders_OrderId",
+                        column: x => x.OrderId,
+                        principalTable: "Orders",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
@@ -684,6 +567,32 @@ namespace RMSProjectAPI.Migrations
                         name: "FK_OrderItems_Orders_OrderId",
                         column: x => x.OrderId,
                         principalTable: "Orders",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "OrderItemExtras",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    OrderItemId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    ExtraId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Price = table.Column<decimal>(type: "decimal(18,2)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_OrderItemExtras", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_OrderItemExtras_Extras_ExtraId",
+                        column: x => x.ExtraId,
+                        principalTable: "Extras",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_OrderItemExtras_OrderItems_OrderItemId",
+                        column: x => x.OrderItemId,
+                        principalTable: "OrderItems",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
@@ -738,26 +647,6 @@ namespace RMSProjectAPI.Migrations
                 column: "TableId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_CartItems_CartId",
-                table: "CartItems",
-                column: "CartId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_CartItems_MenuItemId",
-                table: "CartItems",
-                column: "MenuItemId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_CartItems_MenuItemSizeId",
-                table: "CartItems",
-                column: "MenuItemSizeId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Categories_MenuId",
-                table: "Categories",
-                column: "MenuId");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_Extras_MenuItemId",
                 table: "Extras",
                 column: "MenuItemId");
@@ -808,6 +697,16 @@ namespace RMSProjectAPI.Migrations
                 column: "MenuItemId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_OrderItemExtras_ExtraId",
+                table: "OrderItemExtras",
+                column: "ExtraId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_OrderItemExtras_OrderItemId",
+                table: "OrderItemExtras",
+                column: "OrderItemId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_OrderItems_MenuItemId",
                 table: "OrderItems",
                 column: "MenuItemId");
@@ -853,19 +752,15 @@ namespace RMSProjectAPI.Migrations
                 column: "WaiterId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Payments_OrderId",
-                table: "Payments",
-                column: "OrderId");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_PhoneNumbers_UserId",
                 table: "PhoneNumbers",
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Suppliers_SupervisorId",
-                table: "Suppliers",
-                column: "SupervisorId");
+                name: "IX_Tables_TableNumber",
+                table: "Tables",
+                column: "TableNumber",
+                unique: true);
         }
 
         /// <inheritdoc />
@@ -890,13 +785,7 @@ namespace RMSProjectAPI.Migrations
                 name: "Bookings");
 
             migrationBuilder.DropTable(
-                name: "CartItems");
-
-            migrationBuilder.DropTable(
                 name: "ContactForms");
-
-            migrationBuilder.DropTable(
-                name: "Extras");
 
             migrationBuilder.DropTable(
                 name: "FavoriteMeals");
@@ -914,28 +803,25 @@ namespace RMSProjectAPI.Migrations
                 name: "Offers");
 
             migrationBuilder.DropTable(
-                name: "OrderItems");
+                name: "OrderItemExtras");
 
             migrationBuilder.DropTable(
                 name: "OrderLogs");
 
             migrationBuilder.DropTable(
-                name: "Payments");
-
-            migrationBuilder.DropTable(
                 name: "PhoneNumbers");
-
-            migrationBuilder.DropTable(
-                name: "Suppliers");
 
             migrationBuilder.DropTable(
                 name: "AspNetRoles");
 
             migrationBuilder.DropTable(
-                name: "Carts");
+                name: "Chats");
 
             migrationBuilder.DropTable(
-                name: "Chats");
+                name: "Extras");
+
+            migrationBuilder.DropTable(
+                name: "OrderItems");
 
             migrationBuilder.DropTable(
                 name: "MenuItemSizes");
@@ -954,9 +840,6 @@ namespace RMSProjectAPI.Migrations
 
             migrationBuilder.DropTable(
                 name: "Categories");
-
-            migrationBuilder.DropTable(
-                name: "Menus");
         }
     }
 }

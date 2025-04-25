@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using EllipticCurve.Utils;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using RMSProjectAPI.Database;
@@ -34,7 +35,7 @@ namespace RMSProjectAPI.Controllers
             {
                 Id = Guid.NewGuid(),
                 OrderDate = DateTime.UtcNow,
-                Status = OrderStatus.Paid,
+                Status = OrderStatus.Pending,
                 Type = orderType,
                 Latitude = createOrderDto.Latitude,
                 Longitude = createOrderDto.Longitude,
@@ -76,7 +77,12 @@ namespace RMSProjectAPI.Controllers
                     o.EndDate >= now
                 );
 
-                var basePrice = activeOffer != null ? activeOffer.Price : menuItemSize.Price;
+                var basePrice = menuItemSize.Price;
+                if (activeOffer != null)
+                {
+                    var discount = activeOffer.Price;
+                    basePrice = Math.Max(0, basePrice - discount);
+                }
 
                 var orderItem = new OrderItem
                 {
@@ -301,7 +307,13 @@ namespace RMSProjectAPI.Controllers
                 EstimatedPreparationTime = order.EstimatedPreparationTime
             };
 
-            return Ok(dto);
+            return Ok(new
+            {
+                order.Id,
+                order.OrderDate,
+                order.EstimatedPreparationTime,
+                ExpectedReadyTime = order.OrderDate + order.EstimatedPreparationTime
+            });
         }
 
         [HttpGet("GetReadyDeliveryOrders")]

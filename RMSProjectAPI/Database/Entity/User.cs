@@ -11,13 +11,11 @@ namespace RMSProjectAPI.Database.Entity
         public string LastName { get; set; }
         public DateOnly? BirthDate { get; set; }
         public char? Gender { get; set; }
-        public string Country { get; set; }
-        public string City { get; set; }
-        public string Street { get; set; }
         public DateOnly CreatedAt { get; set; }
         public string? Status { get; set; }
         public string? ImagePath { get; set; }
 
         public virtual List<Order> Orders { get; set; }
+        public virtual List<Address> Addresses { get; set; } = new();
     }
 }

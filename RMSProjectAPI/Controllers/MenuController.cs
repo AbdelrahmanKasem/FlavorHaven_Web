@@ -23,7 +23,7 @@ namespace RMSProjectAPI.Controllers
 
         // ✅ Create Category
         [HttpPost("CreateCategory")]
-        [Authorize(Roles = "admin")]
+        //[Authorize(Roles = "admin")]
         public async Task<IActionResult> CreateCategory([FromBody] CategoryDto categoryDto)
         {
             if (categoryDto == null)
@@ -61,7 +61,7 @@ namespace RMSProjectAPI.Controllers
 
         // ✅ Update Category
         [HttpPut("UpdateCategory/{id}")]
-        [Authorize (Roles = "admin")]
+        //[Authorize (Roles = "admin")]
         public async Task<IActionResult> UpdateCategory(Guid id, [FromBody] UpdateCategoryDto categoryDto)
         {
             var category = await _context.Categories.FindAsync(id);
@@ -76,7 +76,7 @@ namespace RMSProjectAPI.Controllers
 
         // ✅ Delete Category
         [HttpDelete("DeleteCategory/{id}")]
-        [Authorize(Roles = "admin")]
+        //[Authorize(Roles = "admin")]
         public async Task<IActionResult> DeleteCategory(Guid id)
         {
             var category = await _context.Categories.FindAsync(id);
@@ -90,7 +90,7 @@ namespace RMSProjectAPI.Controllers
 
         // ✅ Create MenuItem
         [HttpPost("CreateMenuItem")]
-        [Authorize(Roles = "admin")]
+        //[Authorize(Roles = "admin")]
         public async Task<IActionResult> CreateMenuItem([FromBody] MenuItemDto menuItemDto)
         {
             if (menuItemDto == null)
@@ -113,17 +113,86 @@ namespace RMSProjectAPI.Controllers
             return CreatedAtAction(nameof(GetMenuItemById), new { id = menuItem.Id }, menuItem);
         }
 
-        // ✅ Get all MenuItems
+        //// ✅ Get all MenuItems
+        //[HttpGet("GetMenuItems")]
+        //public async Task<IActionResult> GetAllMenuItems()
+        //{
+        //    var menuItems = await _context.MenuItems.ToListAsync();
+        //    return Ok(menuItems);
+        //}
+
         [HttpGet("GetMenuItems")]
         public async Task<IActionResult> GetAllMenuItems()
         {
-            var menuItems = await _context.MenuItems.ToListAsync();
+            var now = DateTime.UtcNow;
+
+            var menuItems = await _context.MenuItems
+                .Include(mi => mi.Offers)
+                .Select(mi => new
+                {
+                    mi.Id,
+                    mi.Name,
+                    mi.Price,
+                    mi.AverageRating,
+                    mi.RatingCount,
+                    mi.TotalRating,
+                    mi.Description,
+                    mi.ImagePath,
+                    mi.CategoryId,
+                    mi.Duration,
+                    ValidOffer = mi.Offers.FirstOrDefault(o =>
+                        o.IsActive &&
+                        o.StartDate <= now &&
+                        o.EndDate >= now) != null
+                        ? new
+                        {
+                            OfferTitle = mi.Offers.FirstOrDefault(o =>
+                                o.IsActive &&
+                                o.StartDate <= now &&
+                                o.EndDate >= now).Title,
+                            OfferValue = mi.Offers.FirstOrDefault(o =>
+                                o.IsActive &&
+                                o.StartDate <= now &&
+                                o.EndDate >= now).Price
+                        }
+                        : null
+                })
+                .ToListAsync();
+
             return Ok(menuItems);
         }
+
+
+        //[HttpGet("GetMenuItemsByCategory/{categoryId}")]
+        //public async Task<IActionResult> GetMenuItemsByCategoryId(Guid categoryId, [FromQuery] Guid? userId = null)
+        //{
+        //    var menuItemsQuery = _context.MenuItems
+        //        .Where(m => m.CategoryId == categoryId)
+        //        .Select(m => new
+        //        {
+        //            m.Id,
+        //            m.Name,
+        //            m.Description,
+        //            m.ImagePath,
+        //            m.Price,
+        //            m.Duration,
+        //            m.TotalRating,
+        //            m.RatingCount,
+        //            m.CategoryId,
+        //            AverageRating = m.RatingCount > 0 ? (double)m.TotalRating / m.RatingCount : 0,
+        //            IsFavorite = userId != null && _context.FavoriteMeals.Any(f => f.MenuItemId == m.Id && f.UserId == userId)
+        //        });
+
+        //    var menuItems = await menuItemsQuery.ToListAsync();
+
+        //    return Ok(menuItems);
+        //}
 
         [HttpGet("GetMenuItemsByCategory/{categoryId}")]
         public async Task<IActionResult> GetMenuItemsByCategoryId(Guid categoryId, [FromQuery] Guid? userId = null)
         {
+            var now = DateTime.UtcNow;
+
             var menuItemsQuery = _context.MenuItems
                 .Where(m => m.CategoryId == categoryId)
                 .Select(m => new
@@ -138,7 +207,22 @@ namespace RMSProjectAPI.Controllers
                     m.RatingCount,
                     m.CategoryId,
                     AverageRating = m.RatingCount > 0 ? (double)m.TotalRating / m.RatingCount : 0,
-                    IsFavorite = userId != null && _context.FavoriteMeals.Any(f => f.MenuItemId == m.Id && f.UserId == userId)
+                    IsFavorite = userId != null && _context.FavoriteMeals.Any(f => f.MenuItemId == m.Id && f.UserId == userId),
+
+                    // ✅ Valid offer check and return offer details
+                    ValidOffer = m.Offers
+                        .Where(o => o.IsActive && o.StartDate <= now && o.EndDate >= now)
+                        .Select(o => new
+                        {
+                            o.Id,
+                            o.Title,
+                            o.Price,
+                            o.Description,
+                            o.ImagePath,
+                            o.StartDate,
+                            o.EndDate
+                        })
+                        .FirstOrDefault()
                 });
 
             var menuItems = await menuItemsQuery.ToListAsync();
@@ -146,15 +230,79 @@ namespace RMSProjectAPI.Controllers
             return Ok(menuItems);
         }
 
+
+        //[HttpGet("GetMenuItem/{id}")]
+        //public async Task<IActionResult> GetMenuItemById(Guid id)
+        //{
+        //    var menuItem = await _context.MenuItems
+        //        .Include(m => m.Category)
+        //        .Include(m => m.Extras)
+        //        .Include(m => m.Sizes)
+        //        .Include(m => m.Suggestions)
+        //        .FirstOrDefaultAsync(m => m.Id == id);
+
+        //    if (menuItem == null)
+        //        return NotFound();
+
+        //    return Ok(menuItem);
+        //}
+
         [HttpGet("GetMenuItem/{id}")]
         public async Task<IActionResult> GetMenuItemById(Guid id)
         {
+            var now = DateTime.UtcNow;
+
             var menuItem = await _context.MenuItems
                 .Include(m => m.Category)
                 .Include(m => m.Extras)
                 .Include(m => m.Sizes)
                 .Include(m => m.Suggestions)
-                .FirstOrDefaultAsync(m => m.Id == id);
+                .Include(m => m.Offers)
+                .Where(m => m.Id == id)
+                .Select(m => new
+                {
+                    m.Id,
+                    m.Name,
+                    m.Description,
+                    m.ImagePath,
+                    m.TotalRating,
+                    m.RatingCount,
+                    m.Price,
+                    m.Duration,
+                    m.CategoryId,
+                    CategoryName = m.Category.Name,
+                    Sizes = m.Sizes.Select(s => new
+                    {
+                        s.Id,
+                        s.Price,
+                        s.Grams,
+                    }),
+                    Extras = m.Extras.Select(e => new
+                    {
+                        e.Id,
+                        e.Name,
+                        e.Price,
+                        e.ImagePath,
+                    }),
+                    Suggestions = m.Suggestions.Select(s => new
+                    {
+                        s.Id
+                    }),
+                    ValidOffer = m.Offers
+                        .Where(o => o.IsActive && o.StartDate <= now && o.EndDate >= now)
+                        .Select(o => new
+                        {
+                            o.Id,
+                            o.Title,
+                            o.Description,
+                            o.Price,
+                            o.ImagePath,
+                            o.StartDate,
+                            o.EndDate
+                        })
+                        .FirstOrDefault()
+                })
+                .FirstOrDefaultAsync();
 
             if (menuItem == null)
                 return NotFound();
@@ -162,9 +310,10 @@ namespace RMSProjectAPI.Controllers
             return Ok(menuItem);
         }
 
+
         // ✅ Update MenuItem
         [HttpPut("UpdateMenuItem/{id}")]
-        [Authorize(Roles = "admin")]
+        //[Authorize(Roles = "admin")]
         public async Task<IActionResult> UpdateMenuItem(Guid id, [FromBody] UpdateMenuItemDto menuItemDto)
         {
             var menuItem = await _context.MenuItems.FindAsync(id);
@@ -183,7 +332,7 @@ namespace RMSProjectAPI.Controllers
 
         // ✅ Delete MenuItem
         [HttpDelete("DeleteMenuItem/{id}")]
-        [Authorize(Roles = "admin")]
+        //[Authorize(Roles = "admin")]
         public async Task<IActionResult> DeleteMenuItem(Guid id)
         {
             var menuItem = await _context.MenuItems.FindAsync(id);
@@ -197,7 +346,7 @@ namespace RMSProjectAPI.Controllers
 
         // Create an Extra
         [HttpPost("CreateExtra")]
-        [Authorize(Roles = "admin")]
+        //[Authorize(Roles = "admin")]
         public async Task<ActionResult<ExtraDto>> CreateExtra(ExtraDto extraDto)
         {
             if (extraDto == null)
@@ -225,7 +374,7 @@ namespace RMSProjectAPI.Controllers
 
         // Delete an Extra
         [HttpDelete("DeleteExtra/{id}")]
-        [Authorize(Roles = "admin")]
+        //[Authorize(Roles = "admin")]
         public async Task<ActionResult> DeleteExtra(Guid id)
         {
             var extra = await _context.Extras.FindAsync(id);
@@ -362,7 +511,7 @@ namespace RMSProjectAPI.Controllers
 
         // Update a size
         [HttpPut("UpdateMenuItemSize/{id}")]
-        [Authorize(Roles = "admin")]
+        //[Authorize(Roles = "admin")]
         public async Task<IActionResult> UpdateMenuItemSize(Guid id, [FromBody] UpdateMenuItemSizeDto sizeDto)
         {
             var size = await _context.MenuItemSizes.FindAsync(id);
@@ -514,7 +663,7 @@ namespace RMSProjectAPI.Controllers
         }
 
         [HttpPost("Rate")]
-        [Authorize]
+        //[Authorize]
         public async Task<IActionResult> RateMenuItem([FromBody] MenuItemRatingDto dto)
         {
             if (dto.Rating < 1 || dto.Rating > 5)

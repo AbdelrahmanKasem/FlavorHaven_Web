@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using RMSProjectAPI.Database;
 using RMSProjectAPI.Database.Entity;
@@ -56,11 +57,8 @@ namespace RMSProjectAPI.Controllers
                 LastName = userDto.LastName,
                 BirthDate = userDto.BirthDate,
                 Gender = userDto.Gender,
-                Country = userDto.Country,
-                City = userDto.City,
-                Street = userDto.Street,
                 Status = userDto.Status,
-                ImagePath = userDto.ImagePath,
+                ImagePath = userDto.ImagePath
             };
 
             var result = await _userManager.CreateAsync(user, userDto.Password);
@@ -69,7 +67,7 @@ namespace RMSProjectAPI.Controllers
                 return BadRequest(result.Errors);
             }
 
-            await _userManager.AddToRoleAsync(user, "customer");
+            await _userManager.AddToRoleAsync(user, "admin");
 
             var roles = await _userManager.GetRolesAsync(user);
             var token = await GenerateJwtToken(user);
@@ -78,13 +76,11 @@ namespace RMSProjectAPI.Controllers
                 Id = user.Id,
                 Email = user.Email,
                 UserName = user.UserName,
+                PhoneNumber = user.PhoneNumber,
                 FirstName = user.FirstName,
                 LastName = user.LastName,
                 BirthDate = user.BirthDate,
                 Gender = user.Gender,
-                Country = user.Country,
-                City = user.City,
-                Street = user.Street,
                 Status = user.Status,
                 ImagePath = user.ImagePath,
                 Token = token,
@@ -196,13 +192,11 @@ namespace RMSProjectAPI.Controllers
                 Id = user.Id,
                 Email = user.Email,
                 UserName = user.UserName,
+                PhoneNumber = user.PhoneNumber,
                 FirstName = user.FirstName,
                 LastName = user.LastName,
                 BirthDate = user.BirthDate,
                 Gender = user.Gender,
-                Country = user.Country,
-                City = user.City,
-                Street = user.Street,
                 Status = user.Status,
                 ImagePath = user.ImagePath,
                 Token = token,
@@ -213,7 +207,7 @@ namespace RMSProjectAPI.Controllers
         }
 
         [HttpPost("AddRole")]
-        [Authorize(Roles = "admin")]
+        //[Authorize(Roles = "admin")]
         public async Task<IActionResult> AddRole([FromBody] string roleName)
         {
             if (string.IsNullOrWhiteSpace(roleName))
@@ -306,9 +300,6 @@ namespace RMSProjectAPI.Controllers
             user.LastName = updatedUser.LastName;
             user.BirthDate = updatedUser.BirthDate;
             user.Gender = updatedUser.Gender;
-            user.Country = updatedUser.Country;
-            user.City = updatedUser.City;
-            user.Street = updatedUser.Street;
             user.Status = updatedUser.Status;
 
             var result = await _userManager.UpdateAsync(user);
@@ -444,6 +435,81 @@ namespace RMSProjectAPI.Controllers
 
             var newToken = await GenerateJwtToken(user);
             return Ok(new { token = newToken });
+        }
+
+        [HttpPut("AddPhoneNumber/{id}")]
+        [Authorize]
+        public async Task<IActionResult> AddPhoneNumber(string id, [FromBody] string phoneNumber)
+        {
+            if (string.IsNullOrWhiteSpace(phoneNumber))
+                return BadRequest("Phone number is required.");
+
+            var user = await _userManager.FindByIdAsync(id);
+            if (user == null)
+                return NotFound("User not found.");
+
+            user.PhoneNumber = phoneNumber;
+            var result = await _userManager.UpdateAsync(user);
+
+            if (!result.Succeeded)
+                return BadRequest(result.Errors);
+
+            return Ok("Phone number added/updated successfully.");
+        }
+
+        [HttpGet("GetUserAddresses/{userId}")]
+        public async Task<ActionResult<IEnumerable<AddressDto>>> GetUserAddresses(Guid userId)
+        {
+            var addresses = await _appDbContext.Addresses
+                .Where(a => a.UserId == userId)
+                .Select(a => new AddressDto
+                {
+                    Id = a.Id,
+                    Country = a.Country,
+                    City = a.City,
+                    Street = a.Street,
+                    BuildingNumber = a.BuildingNumber,
+                    Description = a.Description
+                })
+                .ToListAsync();
+
+            return Ok(addresses);
+        }
+
+        [HttpPost("AddAddress/{userId}")]
+        public async Task<IActionResult> AddAddress(Guid userId, [FromBody] CreateAddressDto dto)
+        {
+            var user = await _userManager.FindByIdAsync(userId.ToString());
+            if (user == null)
+                return NotFound("User not found");
+
+            var address = new Address
+            {
+                Id = Guid.NewGuid(),
+                UserId = user.Id,
+                Country = dto.Country,
+                City = dto.City,
+                Street = dto.Street,
+                BuildingNumber = dto.BuildingNumber,
+                Description = dto.Description
+            };
+
+            _appDbContext.Addresses.Add(address);
+            await _appDbContext.SaveChangesAsync();
+
+            return Ok("Address added successfully");
+        }
+
+        [HttpDelete("DeleteAddress/{id}")]
+        public async Task<IActionResult> DeleteAddress(Guid id)
+        {
+            var address = await _appDbContext.Addresses.FindAsync(id);
+            if (address == null)
+                return NotFound();
+
+            _appDbContext.Addresses.Remove(address);
+            await _appDbContext.SaveChangesAsync();
+            return Ok("Address deleted successfully");
         }
 
         // ==== Testing Area ====
