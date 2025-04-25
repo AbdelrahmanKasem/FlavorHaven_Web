@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RMSProjectAPI.Database;
 using RMSProjectAPI.Database.Entity;
@@ -17,7 +18,6 @@ namespace RMSProjectAPI.Controllers
             _context = context;
         }
 
-        // GET: api/bookings
         [HttpGet("GetBookings")]
         public async Task<ActionResult<IEnumerable<BookingDto>>> GetBookings()
         {
@@ -36,7 +36,6 @@ namespace RMSProjectAPI.Controllers
                 }).ToListAsync();
         }
 
-        // GET: api/bookings/{id}
         [HttpGet("GetBooking/{id}")]
         public async Task<ActionResult<BookingDto>> GetBooking(Guid id)
         {
@@ -58,6 +57,7 @@ namespace RMSProjectAPI.Controllers
             };
         }
 
+        [Authorize]
         [HttpPost("CreateBooking")]
         public async Task<ActionResult<BookingDto>> SmartCreateBooking(CreateBookingDto dto)
         {
@@ -120,8 +120,8 @@ namespace RMSProjectAPI.Controllers
             return BadRequest("No available tables match the booking request at the specified time.");
         }
 
-        // PUT: api/bookings/{id}
         [HttpPut("UpdateBooking/{id}")]
+        [Authorize]
         public async Task<IActionResult> UpdateBooking(Guid id, CreateBookingDto dto)
         {
             var booking = await _context.Bookings.FindAsync(id);
@@ -139,8 +139,8 @@ namespace RMSProjectAPI.Controllers
             return NoContent();
         }
 
-        // DELETE: api/bookings/{id}
         [HttpDelete("DeleteBooking/{id}")]
+        [Authorize (Roles = "admin")]
         public async Task<IActionResult> DeleteBooking(Guid id)
         {
             var booking = await _context.Bookings.FindAsync(id);
@@ -151,8 +151,9 @@ namespace RMSProjectAPI.Controllers
             return NoContent();
         }
 
-        // PATCH: api/bookings/ChangeStatus/{id}
+        
         [HttpPatch("ChangeStatus/{id}")]
+        [Authorize]
         public async Task<IActionResult> ChangeBookingStatus(Guid id, [FromBody] UpdateBookingStatusDto dto)
         {
             var booking = await _context.Bookings.FindAsync(id);
@@ -169,6 +170,5 @@ namespace RMSProjectAPI.Controllers
                 NewStatus = booking.Status.ToString()
             });
         }
-
     }
 }

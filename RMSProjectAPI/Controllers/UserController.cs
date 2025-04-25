@@ -67,7 +67,7 @@ namespace RMSProjectAPI.Controllers
                 return BadRequest(result.Errors);
             }
 
-            await _userManager.AddToRoleAsync(user, "admin");
+            await _userManager.AddToRoleAsync(user, "customer");
 
             var roles = await _userManager.GetRolesAsync(user);
             var token = await GenerateJwtToken(user);
