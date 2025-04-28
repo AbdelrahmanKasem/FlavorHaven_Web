@@ -41,7 +41,7 @@ namespace RMSProjectAPI.DTOs
         public Guid CustomerId { get; set; }
         public Guid? DeliveryId { get; set; }
         public Guid? WaiterId { get; set; }
-        public Guid? TableId { get; set; }
+        public int? TableNumber { get; set; }
         public List<CreateOrderItemDto> OrderItems { get; set; } = new List<CreateOrderItemDto>();
     }
 

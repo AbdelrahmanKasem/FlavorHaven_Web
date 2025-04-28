@@ -39,7 +39,6 @@ namespace RMSProjectAPI.Controllers
             _signInManager = signInManager;
         }
 
-         //✅ Tested
         [HttpPost("Register")]
         public async Task<ActionResult<UserResponseDto>> Register(UserDto userDto)
         {

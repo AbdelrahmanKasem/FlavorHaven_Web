@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using RMSProjectAPI.Database;
@@ -22,8 +23,8 @@ public class TableController : ControllerBase
         _tableRepository = tableRepository;
     }
 
-    // ✅ Add Table
     [HttpPost("AddTable")]
+    [Authorize(Roles = "admin")]
     public async Task<IActionResult> AddTable([FromBody] TableDto tableDto)
     {
         if (tableDto == null || tableDto.Capacity <= 0)
@@ -36,7 +37,6 @@ public class TableController : ControllerBase
         return Ok(new { Message = "Table added successfully" });
     }
 
-    // ✅ Get All Tables
     [HttpGet("GetAll")]
     public async Task<IActionResult> GetAllTables()
     {
@@ -44,7 +44,6 @@ public class TableController : ControllerBase
         return Ok(tables);
     }
 
-    // ✅ Get Table By ID
     [HttpGet("GetById/{tableId}")]
     public async Task<IActionResult> GetTableById(Guid tableId)
     {
@@ -56,8 +55,8 @@ public class TableController : ControllerBase
         return Ok(table);
     }
 
-    // ✅ Update Table
     [HttpPut("Update/{tableId}")]
+    [Authorize(Roles = "admin")]
     public async Task<IActionResult> UpdateTable(Guid tableId, [FromBody] TableDto tableDto)
     {
         var table = await _context.Tables.FindAsync(tableId);
@@ -78,8 +77,8 @@ public class TableController : ControllerBase
         return Ok(new { Message = "Table updated successfully" });
     }
 
-    // ✅ Delete Table
     [HttpDelete("Delete/{tableId}")]
+    [Authorize(Roles = "admin")]
     public async Task<IActionResult> DeleteTable(Guid tableId)
     {
         var table = await _context.Tables.FindAsync(tableId);
@@ -94,8 +93,8 @@ public class TableController : ControllerBase
         return Ok(new { Message = "Table deleted successfully" });
     }
 
-    // ✅ Download QR Code
     [HttpGet("DownloadQRCode/{tableId}")]
+    [Authorize(Roles = "admin")]
     public IActionResult DownloadQrCode(Guid tableId)
     {
         var table = _context.Tables.Find(tableId);
@@ -108,6 +107,7 @@ public class TableController : ControllerBase
     }
 
     [HttpGet("TableStatus")]
+    [Authorize]
     public async Task<ActionResult<object>> GetTablesWithStatus()
     {
         var now = DateTime.Now;
@@ -158,6 +158,7 @@ public class TableController : ControllerBase
     }
 
     [HttpGet("ReadyOrderForTables")]
+    [Authorize]
     public async Task<ActionResult<IEnumerable<OrderDto>>> GetAllReadyOrdersFromTables()
     {
         var readyOrders = await _context.Orders

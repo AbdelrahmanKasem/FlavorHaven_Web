@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RMSProjectAPI.Database;
 using RMSProjectAPI.Database.Entity;
@@ -17,8 +18,8 @@ namespace RMSProjectAPI.Controllers
             _context = context;
         }
 
-        // ✅ Tested
         [HttpPost("CreateOffer")]
+        [Authorize (Roles = "admin")]
         public async Task<ActionResult<OfferDto>> CreateOffer([FromBody] OfferDto offerDto)
         {
             var offer = new Offer
@@ -41,8 +42,8 @@ namespace RMSProjectAPI.Controllers
             return Ok(offerDto);
         }
 
-        // ✅ Tested
         [HttpDelete("DeleteOffer/{id}")]
+        [Authorize(Roles = "admin")]
         public async Task<ActionResult> DeleteOffer(Guid id)
         {
             var offer = await _context.Offers.FindAsync(id);
@@ -55,8 +56,8 @@ namespace RMSProjectAPI.Controllers
             return Ok("Offer deleted.");
         }
 
-        // ✅ Tested
         [HttpPut("UpdateOffer/{id}")]
+        [Authorize(Roles = "admin")]
         public async Task<ActionResult> UpdateOffer(Guid id, [FromBody] OfferDto offerDto)
         {
             var offer = await _context.Offers.FindAsync(id);
@@ -77,7 +78,6 @@ namespace RMSProjectAPI.Controllers
             return Ok("Offer updated.");
         }
 
-        // ✅ Tested
         [HttpGet("GetOfferOffer/{id}")]
         public async Task<ActionResult<OfferDto>> GetOffer(Guid id)
         {
@@ -104,7 +104,6 @@ namespace RMSProjectAPI.Controllers
             return Ok(offerDto);
         }
 
-        // ✅ Tested
         [HttpGet("GetAllOffers")]
         public async Task<ActionResult<IEnumerable<OfferDto>>> GetAllOffers()
         {
@@ -128,7 +127,6 @@ namespace RMSProjectAPI.Controllers
             return Ok(offerDtos);
         }
 
-        // ✅ Tested
         [HttpGet("GetAvailableOffers")]
         public async Task<ActionResult<IEnumerable<OfferDto>>> GetAvailableOffers()
         {

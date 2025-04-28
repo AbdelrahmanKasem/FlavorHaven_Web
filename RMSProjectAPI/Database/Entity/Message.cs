@@ -8,7 +8,6 @@ namespace RMSProjectAPI.Database.Entity
         public Guid MessageID { get; set; }
 
         [Required]
-        [ForeignKey(nameof(Chat))]
         public Guid ChatID { get; set; }
 
         [Required]
@@ -20,7 +19,5 @@ namespace RMSProjectAPI.Database.Entity
         public DateTime SentAt { get; set; } = DateTime.Now;
 
         public bool IsRead { get; set; } = false;
-
-        public Chat Chat { get; set; }
     }
 }

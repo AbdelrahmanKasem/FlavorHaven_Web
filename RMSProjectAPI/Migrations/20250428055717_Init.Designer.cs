@@ -12,8 +12,8 @@ using RMSProjectAPI.Database;
 namespace RMSProjectAPI.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250425131154_AddingPhoneNumber")]
-    partial class AddingPhoneNumber
+    [Migration("20250428055717_Init")]
+    partial class Init
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -156,6 +156,42 @@ namespace RMSProjectAPI.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("RMSProjectAPI.Database.Entity.Address", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("BuildingNumber")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("City")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Country")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Street")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Addresses");
+                });
+
             modelBuilder.Entity("RMSProjectAPI.Database.Entity.Booking", b =>
                 {
                     b.Property<Guid>("Id")
@@ -227,6 +263,10 @@ namespace RMSProjectAPI.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("ChatID");
+
+                    b.HasIndex("User1ID");
+
+                    b.HasIndex("User2ID");
 
                     b.ToTable("Chats");
                 });
@@ -412,6 +452,8 @@ namespace RMSProjectAPI.Migrations
                     b.HasKey("MessageID");
 
                     b.HasIndex("ChatID");
+
+                    b.HasIndex("SenderID");
 
                     b.ToTable("Messages");
                 });
@@ -624,14 +666,8 @@ namespace RMSProjectAPI.Migrations
                     b.Property<DateOnly?>("BirthDate")
                         .HasColumnType("date");
 
-                    b.Property<string>("City")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Country")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateOnly>("CreatedAt")
@@ -683,9 +719,6 @@ namespace RMSProjectAPI.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Status")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Street")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("TwoFactorEnabled")
@@ -788,6 +821,17 @@ namespace RMSProjectAPI.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("RMSProjectAPI.Database.Entity.Address", b =>
+                {
+                    b.HasOne("RMSProjectAPI.Database.Entity.User", "User")
+                        .WithMany("Addresses")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("RMSProjectAPI.Database.Entity.Booking", b =>
                 {
                     b.HasOne("RMSProjectAPI.Database.Entity.User", "Customer")
@@ -805,6 +849,21 @@ namespace RMSProjectAPI.Migrations
                     b.Navigation("Customer");
 
                     b.Navigation("Table");
+                });
+
+            modelBuilder.Entity("RMSProjectAPI.Database.Entity.Chat", b =>
+                {
+                    b.HasOne("RMSProjectAPI.Database.Entity.User", null)
+                        .WithMany()
+                        .HasForeignKey("User1ID")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("RMSProjectAPI.Database.Entity.User", null)
+                        .WithMany()
+                        .HasForeignKey("User2ID")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("RMSProjectAPI.Database.Entity.Extra", b =>
@@ -880,13 +939,17 @@ namespace RMSProjectAPI.Migrations
 
             modelBuilder.Entity("RMSProjectAPI.Database.Entity.Message", b =>
                 {
-                    b.HasOne("RMSProjectAPI.Database.Entity.Chat", "Chat")
+                    b.HasOne("RMSProjectAPI.Database.Entity.Chat", null)
                         .WithMany("Messages")
                         .HasForeignKey("ChatID")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.Navigation("Chat");
+                    b.HasOne("RMSProjectAPI.Database.Entity.User", null)
+                        .WithMany()
+                        .HasForeignKey("SenderID")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("RMSProjectAPI.Database.Entity.Offer", b =>
@@ -986,7 +1049,7 @@ namespace RMSProjectAPI.Migrations
             modelBuilder.Entity("RMSProjectAPI.Database.Entity.OrderLog", b =>
                 {
                     b.HasOne("RMSProjectAPI.Database.Entity.Order", "Order")
-                        .WithMany()
+                        .WithMany("OrderLogs")
                         .HasForeignKey("OrderId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
@@ -1013,6 +1076,8 @@ namespace RMSProjectAPI.Migrations
             modelBuilder.Entity("RMSProjectAPI.Database.Entity.Order", b =>
                 {
                     b.Navigation("OrderItems");
+
+                    b.Navigation("OrderLogs");
                 });
 
             modelBuilder.Entity("RMSProjectAPI.Database.Entity.OrderItem", b =>
@@ -1022,6 +1087,8 @@ namespace RMSProjectAPI.Migrations
 
             modelBuilder.Entity("RMSProjectAPI.Database.Entity.User", b =>
                 {
+                    b.Navigation("Addresses");
+
                     b.Navigation("Orders");
                 });
 

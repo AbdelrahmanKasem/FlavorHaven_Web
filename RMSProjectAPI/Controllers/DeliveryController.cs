@@ -20,6 +20,7 @@ namespace RMSProjectAPI.Controllers
         }
 
         [HttpGet("Details/{deliveryId}")]
+        [Authorize]
         public async Task<IActionResult> GetDeliveryPersonDetails(Guid deliveryId)
         {
             var user = await _context.Users
@@ -110,6 +111,7 @@ namespace RMSProjectAPI.Controllers
         //}
 
         [HttpGet("OrderHistory/{deliveryId}")]
+        [Authorize]
         public async Task<IActionResult> GetOrderHistory(Guid deliveryId)
         {
             var orders = await _context.Orders
@@ -135,6 +137,5 @@ namespace RMSProjectAPI.Controllers
 
             return Ok(orderHistory);
         }
-
     }
 }

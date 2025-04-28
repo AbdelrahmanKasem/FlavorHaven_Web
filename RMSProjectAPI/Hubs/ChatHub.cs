@@ -18,13 +18,11 @@ namespace RMSProjectAPI.Hubs
             Guid sender = Guid.Parse(senderId);
             Guid receiver = Guid.Parse(receiverId);
 
-            // Check if a chat already exists
             var chat = _context.Chats
                 .FirstOrDefault(c =>
                     (c.User1ID == sender && c.User2ID == receiver) ||
                     (c.User1ID == receiver && c.User2ID == sender));
 
-            // Create a new chat if none exists
             if (chat == null)
             {
                 chat = new Chat
@@ -38,7 +36,6 @@ namespace RMSProjectAPI.Hubs
                 await _context.SaveChangesAsync();
             }
 
-            // Create and store the message
             var message = new Message
             {
                 ChatID = chat.ChatID,
@@ -50,7 +47,6 @@ namespace RMSProjectAPI.Hubs
             _context.Messages.Add(message);
             await _context.SaveChangesAsync();
 
-            // Send it to everyone
             await Clients.All.SendAsync("ReceiveMessage", senderId, messageText);
         }
     }

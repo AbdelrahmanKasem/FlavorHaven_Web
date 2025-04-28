@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace RMSProjectAPI.Migrations
 {
     /// <inheritdoc />
-    public partial class Initial : Migration
+    public partial class Init : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -34,9 +34,6 @@ namespace RMSProjectAPI.Migrations
                     LastName = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     BirthDate = table.Column<DateOnly>(type: "date", nullable: true),
                     Gender = table.Column<string>(type: "nvarchar(1)", nullable: true),
-                    Country = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    City = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Street = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     CreatedAt = table.Column<DateOnly>(type: "date", nullable: false),
                     Status = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     ImagePath = table.Column<string>(type: "nvarchar(max)", nullable: true),
@@ -70,20 +67,6 @@ namespace RMSProjectAPI.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Categories", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Chats",
-                columns: table => new
-                {
-                    ChatID = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    User1ID = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    User2ID = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Chats", x => x.ChatID);
                 });
 
             migrationBuilder.CreateTable(
@@ -136,6 +119,29 @@ namespace RMSProjectAPI.Migrations
                         name: "FK_AspNetRoleClaims_AspNetRoles_RoleId",
                         column: x => x.RoleId,
                         principalTable: "AspNetRoles",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Addresses",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    UserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Country = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    City = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    Street = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: true),
+                    BuildingNumber = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Addresses", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Addresses_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
@@ -226,38 +232,26 @@ namespace RMSProjectAPI.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Locations",
+                name: "Chats",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    UserLocation = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    UserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                    ChatID = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    User1ID = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    User2ID = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Locations", x => x.Id);
+                    table.PrimaryKey("PK_Chats", x => x.ChatID);
                     table.ForeignKey(
-                        name: "FK_Locations_AspNetUsers_UserId",
-                        column: x => x.UserId,
+                        name: "FK_Chats_AspNetUsers_User1ID",
+                        column: x => x.User1ID,
                         principalTable: "AspNetUsers",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "PhoneNumbers",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    Number = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    UserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_PhoneNumbers", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_PhoneNumbers_AspNetUsers_UserId",
-                        column: x => x.UserId,
+                        name: "FK_Chats_AspNetUsers_User2ID",
+                        column: x => x.User2ID,
                         principalTable: "AspNetUsers",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
@@ -285,28 +279,6 @@ namespace RMSProjectAPI.Migrations
                         column: x => x.CategoryId,
                         principalTable: "Categories",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Messages",
-                columns: table => new
-                {
-                    MessageID = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    ChatID = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    SenderID = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    MessageText = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    SentAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    IsRead = table.Column<bool>(type: "bit", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Messages", x => x.MessageID);
-                    table.ForeignKey(
-                        name: "FK_Messages_Chats_ChatID",
-                        column: x => x.ChatID,
-                        principalTable: "Chats",
-                        principalColumn: "ChatID",
                         onDelete: ReferentialAction.Restrict);
                 });
 
@@ -396,6 +368,34 @@ namespace RMSProjectAPI.Migrations
                         column: x => x.TableId,
                         principalTable: "Tables",
                         principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Messages",
+                columns: table => new
+                {
+                    MessageID = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    ChatID = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    SenderID = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    MessageText = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    SentAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    IsRead = table.Column<bool>(type: "bit", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Messages", x => x.MessageID);
+                    table.ForeignKey(
+                        name: "FK_Messages_AspNetUsers_SenderID",
+                        column: x => x.SenderID,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_Messages_Chats_ChatID",
+                        column: x => x.ChatID,
+                        principalTable: "Chats",
+                        principalColumn: "ChatID",
                         onDelete: ReferentialAction.Restrict);
                 });
 
@@ -598,6 +598,11 @@ namespace RMSProjectAPI.Migrations
                 });
 
             migrationBuilder.CreateIndex(
+                name: "IX_Addresses_UserId",
+                table: "Addresses",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_AspNetRoleClaims_RoleId",
                 table: "AspNetRoleClaims",
                 column: "RoleId");
@@ -647,6 +652,16 @@ namespace RMSProjectAPI.Migrations
                 column: "TableId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Chats_User1ID",
+                table: "Chats",
+                column: "User1ID");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Chats_User2ID",
+                table: "Chats",
+                column: "User2ID");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Extras_MenuItemId",
                 table: "Extras",
                 column: "MenuItemId");
@@ -659,11 +674,6 @@ namespace RMSProjectAPI.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_FavoriteMeals_UserId",
                 table: "FavoriteMeals",
-                column: "UserId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Locations_UserId",
-                table: "Locations",
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
@@ -690,6 +700,11 @@ namespace RMSProjectAPI.Migrations
                 name: "IX_Messages_ChatID",
                 table: "Messages",
                 column: "ChatID");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Messages_SenderID",
+                table: "Messages",
+                column: "SenderID");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Offers_MenuItemId",
@@ -752,11 +767,6 @@ namespace RMSProjectAPI.Migrations
                 column: "WaiterId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_PhoneNumbers_UserId",
-                table: "PhoneNumbers",
-                column: "UserId");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_Tables_TableNumber",
                 table: "Tables",
                 column: "TableNumber",
@@ -766,6 +776,9 @@ namespace RMSProjectAPI.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropTable(
+                name: "Addresses");
+
             migrationBuilder.DropTable(
                 name: "AspNetRoleClaims");
 
@@ -791,9 +804,6 @@ namespace RMSProjectAPI.Migrations
                 name: "FavoriteMeals");
 
             migrationBuilder.DropTable(
-                name: "Locations");
-
-            migrationBuilder.DropTable(
                 name: "MenuItemSuggestions");
 
             migrationBuilder.DropTable(
@@ -807,9 +817,6 @@ namespace RMSProjectAPI.Migrations
 
             migrationBuilder.DropTable(
                 name: "OrderLogs");
-
-            migrationBuilder.DropTable(
-                name: "PhoneNumbers");
 
             migrationBuilder.DropTable(
                 name: "AspNetRoles");

@@ -63,6 +63,38 @@ namespace RMSProjectAPI.Database
                 .HasForeignKey(ms => ms.SuggestedItemId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            modelBuilder.Entity<Chat>(entity =>
+            {
+                entity.HasKey(c => c.ChatID);
+
+                entity.HasOne<User>()
+                    .WithMany()
+                    .HasForeignKey(c => c.User1ID)
+                    .OnDelete(DeleteBehavior.Restrict); // important to avoid cascade issues
+
+                entity.HasOne<User>()
+                    .WithMany()
+                    .HasForeignKey(c => c.User2ID)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasMany(c => c.Messages)
+                    .WithOne()
+                    .HasForeignKey(m => m.ChatID)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            // Message Entity
+            modelBuilder.Entity<Message>(entity =>
+            {
+                entity.HasKey(m => m.MessageID);
+
+                entity.HasOne<User>()
+                    .WithMany()
+                    .HasForeignKey(m => m.SenderID)
+                    .OnDelete(DeleteBehavior.Restrict); // Sender deletion shouldn't delete messages
+            });
+
+
             foreach (var foreignKey in modelBuilder.Model.GetEntityTypes()
                 .SelectMany(e => e.GetForeignKeys()))
             {

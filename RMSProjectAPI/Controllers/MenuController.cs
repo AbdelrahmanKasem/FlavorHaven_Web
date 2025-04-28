@@ -21,9 +21,8 @@ namespace RMSProjectAPI.Controllers
             _context = context;
         }
 
-        // ✅ Create Category
         [HttpPost("CreateCategory")]
-        //[Authorize(Roles = "admin")]
+        [Authorize(Roles = "admin")]
         public async Task<IActionResult> CreateCategory([FromBody] CategoryDto categoryDto)
         {
             if (categoryDto == null)
@@ -41,7 +40,6 @@ namespace RMSProjectAPI.Controllers
             return CreatedAtAction(nameof(GetCategoryById), new { id = category.Id }, category);
         }
 
-        // ✅ Get all Categories
         [HttpGet("GetCategories")]
         public async Task<IActionResult> GetAllCategories()
         {
@@ -49,7 +47,6 @@ namespace RMSProjectAPI.Controllers
             return Ok(categories);
         }
 
-        // ✅ Get Category by ID
         [HttpGet("GetCategory/{id}")]
         public async Task<IActionResult> GetCategoryById(Guid id)
         {
@@ -59,9 +56,8 @@ namespace RMSProjectAPI.Controllers
             return Ok(category);
         }
 
-        // ✅ Update Category
         [HttpPut("UpdateCategory/{id}")]
-        //[Authorize (Roles = "admin")]
+        [Authorize (Roles = "admin")]
         public async Task<IActionResult> UpdateCategory(Guid id, [FromBody] UpdateCategoryDto categoryDto)
         {
             var category = await _context.Categories.FindAsync(id);
@@ -74,9 +70,8 @@ namespace RMSProjectAPI.Controllers
             return NoContent();
         }
 
-        // ✅ Delete Category
         [HttpDelete("DeleteCategory/{id}")]
-        //[Authorize(Roles = "admin")]
+        [Authorize(Roles = "admin")]
         public async Task<IActionResult> DeleteCategory(Guid id)
         {
             var category = await _context.Categories.FindAsync(id);
@@ -88,9 +83,8 @@ namespace RMSProjectAPI.Controllers
             return NoContent();
         }
 
-        // ✅ Create MenuItem
         [HttpPost("CreateMenuItem")]
-        //[Authorize(Roles = "admin")]
+        [Authorize(Roles = "admin")]
         public async Task<IActionResult> CreateMenuItem([FromBody] MenuItemDto menuItemDto)
         {
             if (menuItemDto == null)
@@ -112,14 +106,6 @@ namespace RMSProjectAPI.Controllers
 
             return CreatedAtAction(nameof(GetMenuItemById), new { id = menuItem.Id }, menuItem);
         }
-
-        //// ✅ Get all MenuItems
-        //[HttpGet("GetMenuItems")]
-        //public async Task<IActionResult> GetAllMenuItems()
-        //{
-        //    var menuItems = await _context.MenuItems.ToListAsync();
-        //    return Ok(menuItems);
-        //}
 
         [HttpGet("GetMenuItems")]
         public async Task<IActionResult> GetAllMenuItems()
@@ -162,32 +148,6 @@ namespace RMSProjectAPI.Controllers
             return Ok(menuItems);
         }
 
-
-        //[HttpGet("GetMenuItemsByCategory/{categoryId}")]
-        //public async Task<IActionResult> GetMenuItemsByCategoryId(Guid categoryId, [FromQuery] Guid? userId = null)
-        //{
-        //    var menuItemsQuery = _context.MenuItems
-        //        .Where(m => m.CategoryId == categoryId)
-        //        .Select(m => new
-        //        {
-        //            m.Id,
-        //            m.Name,
-        //            m.Description,
-        //            m.ImagePath,
-        //            m.Price,
-        //            m.Duration,
-        //            m.TotalRating,
-        //            m.RatingCount,
-        //            m.CategoryId,
-        //            AverageRating = m.RatingCount > 0 ? (double)m.TotalRating / m.RatingCount : 0,
-        //            IsFavorite = userId != null && _context.FavoriteMeals.Any(f => f.MenuItemId == m.Id && f.UserId == userId)
-        //        });
-
-        //    var menuItems = await menuItemsQuery.ToListAsync();
-
-        //    return Ok(menuItems);
-        //}
-
         [HttpGet("GetMenuItemsByCategory/{categoryId}")]
         public async Task<IActionResult> GetMenuItemsByCategoryId(Guid categoryId, [FromQuery] Guid? userId = null)
         {
@@ -209,7 +169,6 @@ namespace RMSProjectAPI.Controllers
                     AverageRating = m.RatingCount > 0 ? (double)m.TotalRating / m.RatingCount : 0,
                     IsFavorite = userId != null && _context.FavoriteMeals.Any(f => f.MenuItemId == m.Id && f.UserId == userId),
 
-                    // ✅ Valid offer check and return offer details
                     ValidOffer = m.Offers
                         .Where(o => o.IsActive && o.StartDate <= now && o.EndDate >= now)
                         .Select(o => new
@@ -229,23 +188,6 @@ namespace RMSProjectAPI.Controllers
 
             return Ok(menuItems);
         }
-
-
-        //[HttpGet("GetMenuItem/{id}")]
-        //public async Task<IActionResult> GetMenuItemById(Guid id)
-        //{
-        //    var menuItem = await _context.MenuItems
-        //        .Include(m => m.Category)
-        //        .Include(m => m.Extras)
-        //        .Include(m => m.Sizes)
-        //        .Include(m => m.Suggestions)
-        //        .FirstOrDefaultAsync(m => m.Id == id);
-
-        //    if (menuItem == null)
-        //        return NotFound();
-
-        //    return Ok(menuItem);
-        //}
 
         [HttpGet("GetMenuItem/{id}")]
         public async Task<IActionResult> GetMenuItemById(Guid id)
@@ -311,9 +253,8 @@ namespace RMSProjectAPI.Controllers
         }
 
 
-        // ✅ Update MenuItem
         [HttpPut("UpdateMenuItem/{id}")]
-        //[Authorize(Roles = "admin")]
+        [Authorize(Roles = "admin")]
         public async Task<IActionResult> UpdateMenuItem(Guid id, [FromBody] UpdateMenuItemDto menuItemDto)
         {
             var menuItem = await _context.MenuItems.FindAsync(id);
@@ -330,9 +271,8 @@ namespace RMSProjectAPI.Controllers
             return NoContent();
         }
 
-        // ✅ Delete MenuItem
         [HttpDelete("DeleteMenuItem/{id}")]
-        //[Authorize(Roles = "admin")]
+        [Authorize(Roles = "admin")]
         public async Task<IActionResult> DeleteMenuItem(Guid id)
         {
             var menuItem = await _context.MenuItems.FindAsync(id);
@@ -344,9 +284,8 @@ namespace RMSProjectAPI.Controllers
             return NoContent();
         }
 
-        // Create an Extra
         [HttpPost("CreateExtra")]
-        //[Authorize(Roles = "admin")]
+        [Authorize(Roles = "admin")]
         public async Task<ActionResult<ExtraDto>> CreateExtra(ExtraDto extraDto)
         {
             if (extraDto == null)
@@ -372,9 +311,8 @@ namespace RMSProjectAPI.Controllers
             return CreatedAtAction(nameof(GetExtra), new { id = extraDto.Id }, extraDto);
         }
 
-        // Delete an Extra
         [HttpDelete("DeleteExtra/{id}")]
-        //[Authorize(Roles = "admin")]
+        [Authorize(Roles = "admin")]
         public async Task<ActionResult> DeleteExtra(Guid id)
         {
             var extra = await _context.Extras.FindAsync(id);
@@ -388,7 +326,6 @@ namespace RMSProjectAPI.Controllers
             return NoContent();
         }
 
-        // Update an Extra
         [HttpPut("UpdateExtra/{id}")]
         [Authorize(Roles = "admin")]
         public async Task<ActionResult<ExtraDto>> UpdateExtra(Guid id, UpdateExtraDto extraDto)
@@ -407,7 +344,6 @@ namespace RMSProjectAPI.Controllers
             return Ok(extraDto);
         }
 
-        // Get all Extras
         [HttpGet("GetExtras")]
         public async Task<ActionResult<IEnumerable<ExtraDto>>> GetExtras()
         {
@@ -426,7 +362,6 @@ namespace RMSProjectAPI.Controllers
             return Ok(extras);
         }
 
-        // Get a specific Extra by ID
         [HttpGet("GetExtra/{id}")]
         public async Task<ActionResult<ExtraDto>> GetExtra(Guid id)
         {
@@ -449,7 +384,6 @@ namespace RMSProjectAPI.Controllers
             return Ok(extraDto);
         }
 
-        // Get Extras for a specific MenuItem
         [HttpGet("GetExtrasOfMenuItem/{menuItemId}")]
         public async Task<ActionResult<IEnumerable<ExtraDto>>> GetExtrasForMenuItem(Guid menuItemId)
         {
@@ -473,7 +407,7 @@ namespace RMSProjectAPI.Controllers
         }
 
         [HttpPost("CreateMenuItemSize")]
-        //[Authorize(Roles = "admin")]
+        [Authorize(Roles = "admin")]
         public async Task<IActionResult> CreateMenuItemSize([FromBody] MenuItemSizeDto sizeDto)
         {
             if (sizeDto == null)
@@ -498,7 +432,6 @@ namespace RMSProjectAPI.Controllers
             return CreatedAtAction(nameof(GetMenuItemSizeById), new { id = sizeDto.Id }, sizeDto);
         }     
 
-        // Get a specific size by its ID
         [HttpGet("GetMenuItemSize/{id}")]
         public async Task<IActionResult> GetMenuItemSizeById(Guid id)
         {
@@ -509,9 +442,8 @@ namespace RMSProjectAPI.Controllers
             return Ok(size);
         }
 
-        // Update a size
         [HttpPut("UpdateMenuItemSize/{id}")]
-        //[Authorize(Roles = "admin")]
+        [Authorize(Roles = "admin")]
         public async Task<IActionResult> UpdateMenuItemSize(Guid id, [FromBody] UpdateMenuItemSizeDto sizeDto)
         {
             var size = await _context.MenuItemSizes.FindAsync(id);
@@ -527,7 +459,6 @@ namespace RMSProjectAPI.Controllers
             return Ok(sizeDto);
         }
 
-        // Delete a size
         [HttpDelete("DeleteMenuItemSize/{id}")]
         [Authorize(Roles = "admin")]
         public async Task<IActionResult> DeleteMenuItemSize(Guid id)
@@ -603,7 +534,6 @@ namespace RMSProjectAPI.Controllers
             return Ok(suggestions);
         }
 
-        // ✅ Search Menu Items
         [HttpGet("SearchMenuItems")]
         public async Task<IActionResult> SearchMenuItems([FromQuery] string query)
         {
@@ -663,7 +593,7 @@ namespace RMSProjectAPI.Controllers
         }
 
         [HttpPost("Rate")]
-        //[Authorize]
+        [Authorize]
         public async Task<IActionResult> RateMenuItem([FromBody] MenuItemRatingDto dto)
         {
             if (dto.Rating < 1 || dto.Rating > 5)
@@ -673,7 +603,6 @@ namespace RMSProjectAPI.Controllers
             if (menuItem == null)
                 return NotFound("Menu item not found");
 
-            // Update rating stats
             menuItem.TotalRating += dto.Rating;
             menuItem.RatingCount += 1;
 

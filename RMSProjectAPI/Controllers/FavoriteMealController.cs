@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using RMSProjectAPI.Database;
 using RMSProjectAPI.Database.Entity;
@@ -21,8 +22,8 @@ namespace RMSProjectAPI.Controllers
             _context = context;
         }
 
-        // Get
         [HttpGet("user/{userId}")]
+        [Authorize]
         public async Task<ActionResult<IEnumerable<FavoriteMealDto>>> GetUserFavoriteMeals(Guid userId)
         {
             var favorites = await _context.FavoriteMeals
@@ -38,8 +39,8 @@ namespace RMSProjectAPI.Controllers
             return Ok(favorites);
         }
 
-        // Add
         [HttpPost]
+        [Authorize]
         public async Task<ActionResult> AddFavoriteMeal([FromBody] FavoriteMealDto favoriteMealDto)
         {
             if (await _context.FavoriteMeals.AnyAsync(f => f.UserId == favoriteMealDto.UserId && f.MenuItemId == favoriteMealDto.MenuItemId))
@@ -60,8 +61,8 @@ namespace RMSProjectAPI.Controllers
             return CreatedAtAction(nameof(GetUserFavoriteMeals), new { userId = favoriteMeal.UserId }, favoriteMealDto);
         }
 
-        // Remove
-        [HttpDelete("{userId}/{menuItemId}")]
+        [HttpDelete("Delete/{userId}/{menuItemId}")]
+        [Authorize]
         public async Task<ActionResult> RemoveFavoriteMeal(Guid userId, Guid menuItemId)
         {
             var favoriteMeal = await _context.FavoriteMeals

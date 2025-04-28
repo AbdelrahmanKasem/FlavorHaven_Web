@@ -26,12 +26,138 @@ namespace RMSProjectAPI.Controllers
             _hubContext = hubContext;
         }
 
+        //[HttpPost("CreateOrder")]
+        //[Authorize]
+        //public async Task<ActionResult<OrderDto>> CreateOrder(CreateOrderDto createOrderDto)
+        //{
+        //    if (!Enum.TryParse<OrderType>(createOrderDto.Type.ToString(), out var orderType))
+        //        return BadRequest("Invalid order type");
+
+        //    var order = new Order
+        //    {
+        //        Id = Guid.NewGuid(),
+        //        OrderDate = DateTime.UtcNow,
+        //        Status = OrderStatus.Pending,
+        //        Type = orderType,
+        //        Latitude = createOrderDto.Latitude,
+        //        Longitude = createOrderDto.Longitude,
+        //        Address = createOrderDto.Address,
+        //        PaymentSystem = createOrderDto.PaymentSystem,
+        //        TransactionId = createOrderDto.TransactionId,
+        //        Note = createOrderDto.Note,
+        //        CustomerId = createOrderDto.CustomerId,
+        //        DeliveryId = createOrderDto.DeliveryId,
+        //        WaiterId = createOrderDto.WaiterId,
+        //        TableId = createOrderDto.TableId,
+        //        OrderItems = new List<OrderItem>()
+        //    };
+
+        //    decimal totalPrice = 0;
+        //    TimeSpan totalTime = TimeSpan.Zero;
+
+        //    foreach (var itemDto in createOrderDto.OrderItems)
+        //    {
+        //        var menuItem = await _context.MenuItems
+        //            .Include(mi => mi.Sizes)
+        //            .Include(mi => mi.Extras)
+        //            .Include(mi => mi.Offers)
+        //            .FirstOrDefaultAsync(mi => mi.Id == itemDto.MenuItemId);
+
+        //        if (menuItem == null)
+        //            return BadRequest($"MenuItem with ID {itemDto.MenuItemId} not found");
+
+        //        var menuItemSize = menuItem.Sizes.FirstOrDefault(ms => ms.Id == itemDto.MenuItemSizeId);
+        //        if (menuItemSize == null)
+        //            return BadRequest($"MenuItemSize with ID {itemDto.MenuItemSizeId} not found for MenuItem with ID {itemDto.MenuItemId}");
+
+        //        totalTime += menuItem.Duration;
+
+        //        var now = DateTime.UtcNow;
+        //        var activeOffer = menuItem.Offers.FirstOrDefault(o =>
+        //            o.IsActive &&
+        //            o.StartDate <= now &&
+        //            o.EndDate >= now
+        //        );
+
+        //        var basePrice = menuItemSize.Price;
+        //        if (activeOffer != null)
+        //        {
+        //            var discount = activeOffer.Price;
+        //            basePrice = Math.Max(0, basePrice - discount);
+        //        }
+
+        //        var orderItem = new OrderItem
+        //        {
+        //            Id = Guid.NewGuid(),
+        //            Quantity = itemDto.Quantity,
+        //            Note = itemDto.Note,
+        //            SpicyLevel = itemDto.SpicyLevel,
+        //            Price = basePrice * itemDto.Quantity,
+        //            MenuItemId = menuItem.Id,
+        //            MenuItemSizeId = menuItemSize.Id,
+        //            OrderItemExtras = new List<OrderItemExtra>()
+        //        };
+
+        //        if (itemDto.ExtraIds != null && itemDto.ExtraIds.Count > 0)
+        //        {
+        //            var extras = menuItem.Extras.Where(e => itemDto.ExtraIds.Contains(e.Id)).ToList();
+
+        //            foreach (var extra in extras)
+        //            {
+        //                orderItem.OrderItemExtras.Add(new OrderItemExtra
+        //                {
+        //                    Id = Guid.NewGuid(),
+        //                    ExtraId = extra.Id,
+        //                    Price = extra.Price
+        //                });
+
+        //                orderItem.Price += extra.Price * itemDto.Quantity;
+        //            }
+        //        }
+
+        //        totalPrice += orderItem.Price;
+        //        order.OrderItems.Add(orderItem);
+        //    }
+
+        //    if (orderType == OrderType.Delivery)
+        //    {
+        //        order.DeliveryFee = (decimal)(createOrderDto.DeliveryFee ?? 0);
+        //        totalPrice += order.DeliveryFee;
+        //    }
+
+        //    order.Price = totalPrice;
+        //    order.EstimatedPreparationTime = totalTime;
+
+        //    _context.Orders.Add(order);
+        //    await _context.SaveChangesAsync();
+
+        //    var orderDto = MapToOrderDto(order);
+        //    orderDto.EstimatedPreparationTime = totalTime;
+
+        //    await _hubContext.Clients.All.SendAsync("ReceiveNewOrder", orderDto);
+
+        //    return CreatedAtAction(nameof(GetOrder), new { id = order.Id }, orderDto);
+        //}
+
         [HttpPost("CreateOrder")]
         [Authorize]
         public async Task<ActionResult<OrderDto>> CreateOrder(CreateOrderDto createOrderDto)
         {
             if (!Enum.TryParse<OrderType>(createOrderDto.Type.ToString(), out var orderType))
                 return BadRequest("Invalid order type");
+
+            // Find TableId based on TableNumber
+            Guid? tableId = null;
+            if (createOrderDto.TableNumber.HasValue)
+            {
+                var table = await _context.Tables
+                    .FirstOrDefaultAsync(t => t.TableNumber == createOrderDto.TableNumber.Value);
+
+                if (table == null)
+                    return BadRequest($"Table with number {createOrderDto.TableNumber.Value} not found");
+
+                tableId = table.Id;
+            }
 
             var order = new Order
             {
@@ -48,7 +174,7 @@ namespace RMSProjectAPI.Controllers
                 CustomerId = createOrderDto.CustomerId,
                 DeliveryId = createOrderDto.DeliveryId,
                 WaiterId = createOrderDto.WaiterId,
-                TableId = createOrderDto.TableId,
+                TableId = tableId, // <-- New: use found TableId
                 OrderItems = new List<OrderItem>()
             };
 

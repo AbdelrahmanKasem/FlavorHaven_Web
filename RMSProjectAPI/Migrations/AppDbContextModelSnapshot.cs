@@ -261,6 +261,10 @@ namespace RMSProjectAPI.Migrations
 
                     b.HasKey("ChatID");
 
+                    b.HasIndex("User1ID");
+
+                    b.HasIndex("User2ID");
+
                     b.ToTable("Chats");
                 });
 
@@ -445,6 +449,8 @@ namespace RMSProjectAPI.Migrations
                     b.HasKey("MessageID");
 
                     b.HasIndex("ChatID");
+
+                    b.HasIndex("SenderID");
 
                     b.ToTable("Messages");
                 });
@@ -842,6 +848,21 @@ namespace RMSProjectAPI.Migrations
                     b.Navigation("Table");
                 });
 
+            modelBuilder.Entity("RMSProjectAPI.Database.Entity.Chat", b =>
+                {
+                    b.HasOne("RMSProjectAPI.Database.Entity.User", null)
+                        .WithMany()
+                        .HasForeignKey("User1ID")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("RMSProjectAPI.Database.Entity.User", null)
+                        .WithMany()
+                        .HasForeignKey("User2ID")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("RMSProjectAPI.Database.Entity.Extra", b =>
                 {
                     b.HasOne("RMSProjectAPI.Database.Entity.MenuItem", "MenuItem")
@@ -915,13 +936,17 @@ namespace RMSProjectAPI.Migrations
 
             modelBuilder.Entity("RMSProjectAPI.Database.Entity.Message", b =>
                 {
-                    b.HasOne("RMSProjectAPI.Database.Entity.Chat", "Chat")
+                    b.HasOne("RMSProjectAPI.Database.Entity.Chat", null)
                         .WithMany("Messages")
                         .HasForeignKey("ChatID")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.Navigation("Chat");
+                    b.HasOne("RMSProjectAPI.Database.Entity.User", null)
+                        .WithMany()
+                        .HasForeignKey("SenderID")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("RMSProjectAPI.Database.Entity.Offer", b =>

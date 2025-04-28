@@ -45,7 +45,7 @@ namespace RMSProjectAPI.Controllers
         }
 
         [HttpGet("GetContactForms")]
-        //[Authorize (Roles ="admin")]
+        [Authorize (Roles ="admin")]
         public async Task<IActionResult> GetAllContactForms()
         {
             try
