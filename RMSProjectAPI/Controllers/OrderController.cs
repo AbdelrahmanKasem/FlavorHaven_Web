@@ -266,7 +266,7 @@ namespace RMSProjectAPI.Controllers
         }
 
         [HttpGet("GetAllOrders")]
-        [Authorize(Roles = "admin")]
+        [Authorize]
         public async Task<ActionResult<List<OrderDto>>> GetAllOrders()
         {
             var orders = await _context.Orders

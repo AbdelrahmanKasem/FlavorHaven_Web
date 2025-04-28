@@ -23,6 +23,7 @@ namespace RMSProjectAPI.DTOs
         public Guid CustomerId { get; set; }
         public Guid? DeliveryId { get; set; }
         public Guid? WaiterId { get; set; }
+        public Guid? CashierId { get; set; }
         public Guid? TableId { get; set; }
         public TimeSpan EstimatedPreparationTime { get; set; }
         public List<OrderItemDto> OrderItems { get; set; } = new List<OrderItemDto>();
@@ -41,6 +42,7 @@ namespace RMSProjectAPI.DTOs
         public Guid CustomerId { get; set; }
         public Guid? DeliveryId { get; set; }
         public Guid? WaiterId { get; set; }
+        public Guid? CashierId { get; set; }
         public int? TableNumber { get; set; }
         public List<CreateOrderItemDto> OrderItems { get; set; } = new List<CreateOrderItemDto>();
     }

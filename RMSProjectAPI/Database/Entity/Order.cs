@@ -40,6 +40,11 @@ namespace RMSProjectAPI.Database.Entity
         [ForeignKey(nameof(DeliveryId))]
         public virtual User? DeliveryPerson { get; set; }
 
+        // Cashier Person
+        public Guid? CashierId { get; set; }
+        [ForeignKey(nameof(CashierId))]
+        public virtual User? CashierPerson { get; set; }
+
         public Guid? TableId { get; set; }
 
         [ForeignKey(nameof(TableId))]

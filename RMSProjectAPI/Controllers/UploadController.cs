@@ -26,10 +26,8 @@ namespace RMSProjectAPI.Controllers
                 return BadRequest("No file uploaded.");
             }
 
-            // Define the folder path where images will be stored
             var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images");
 
-            // Ensure the folder exists
             if (!Directory.Exists(uploadsFolder))
             {
                 Directory.CreateDirectory(uploadsFolder);
@@ -40,7 +38,6 @@ namespace RMSProjectAPI.Controllers
             var newFileName = Guid.NewGuid().ToString() + fileExtension;
             var filePath = Path.Combine(uploadsFolder, newFileName);
 
-            // Save the file
             using (var stream = new FileStream(filePath, FileMode.Create))
             {
                 await file.CopyToAsync(stream);
